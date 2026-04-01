@@ -163,7 +163,7 @@ Any platform that supports Node.js and Next.js works — Netlify, Railway, Rende
 - [ ] Mobile responsive layout
 - [ ] Multi-user / shared seeds
 - [ ] Authentication (Clerk / NextAuth)
-- [ ] Slovenian language UI
+
 
 ---
 
