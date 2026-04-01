@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUATERNULI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --white: #FFFFFF;
+    --black: #111111;
+    --red: #E8001D;
+    --gray-100: #F5F5F5;
+    --gray-200: #E8E8E8;
+    --gray-400: #999999;
+    --gray-600: #555555;
+    --mono: 'JetBrains Mono', 'Courier New', monospace;
+    --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --grid: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--white);
+    color: var(--black);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── TOP BAR ─── */
+  #topbar {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 2px solid var(--black);
+    height: 48px;
+    flex-shrink: 0;
+  }
+
+  #logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px 0 12px;
+    border-right: 2px solid var(--black);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  #logo img {
+    height: 30px;
+    width: 30px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+  }
+
+  #logo-text {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-image: linear-gradient(90deg, var(--black) 0%, var(--black) 100%);
+  }
+
+  #mode-toggle {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 2px;
+    border-right: 2px solid var(--black);
+  }
+
+  .mode-btn {
+    padding: 5px 14px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1.5px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    color: var(--gray-400);
+    transition: all 0.12s;
+  }
+
+  .mode-btn.active {
+    background: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+  }
+
+  .mode-btn:not(.active):hover {
+    border-color: var(--black);
+    color: var(--black);
+  }
+
+  #topbar-meta {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 24px;
+    margin-left: auto;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--gray-400);
+    text-transform: uppercase;
+  }
+
+  #seed-count { font-weight: 700; color: var(--red); }
+
+  /* ─── MAIN LAYOUT ─── */
+  #app {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    width: 260px;
+    border-right: 2px solid var(--black);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  #sidebar-header {
+    padding: 16px;
+    border-bottom: 1.5px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #search-input {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 7px 10px;
+    border: 1.5px solid var(--gray-200);
+    background: var(--gray-100);
+    color: var(--black);
+    outline: none;
+    letter-spacing: 0.02em;
+    transition: border-color 0.12s;
+  }
+
+  #search-input:focus { border-color: var(--black); background: var(--white); }
+  #search-input::placeholder { color: var(--gray-400); }
+
+  #phase-filter {
+    display: flex;
+    gap: 4px;
+  }
+
+  .phase-chip {
+    flex: 1;
+    padding: 4px 0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    border: 1.5px solid var(--gray-200);
+    background: transparent;
+    color: var(--gray-400);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.1s;
+  }
+
+  .phase-chip.active { background: var(--black); color: var(--white); border-color: var(--black); }
+  .phase-chip[data-phase="capture"].active { background: var(--black); }
+  .phase-chip[data-phase="tend"].active { background: #555; }
+  .phase-chip[data-phase="harvest"].active { background: var(--red); border-color: var(--red); }
+
+  #seed-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  #seed-list::-webkit-scrollbar { width: 4px; }
+  #seed-list::-webkit-scrollbar-thumb { background: var(--gray-200); }
+
+  .seed-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    border-bottom: 1px solid var(--gray-100);
+    transition: all 0.1s;
+    position: relative;
+  }
+
+  .seed-item:hover { background: var(--gray-100); }
+  .seed-item.active { border-left-color: var(--red); background: var(--gray-100); }
+
+  .seed-item-phase {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    margin-bottom: 4px;
+  }
+
+  .seed-item[data-phase="harvest"] .seed-item-phase { color: var(--red); }
+  .seed-item[data-phase="tend"] .seed-item-phase { color: var(--gray-600); }
+
+  .seed-item-title {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--black);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .seed-item-date {
+    font-size: 10px;
+    color: var(--gray-400);
+    margin-top: 4px;
+    font-family: var(--mono);
+  }
+
+  #new-seed-btn {
+    margin: 12px 16px;
+    padding: 10px;
+    width: calc(100% - 32px);
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.12s;
+    flex-shrink: 0;
+  }
+
+  #new-seed-btn:hover { background: var(--red); }
+
+  /* ─── MAIN AREA ─── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ─── NOTEBOOK MODE ─── */
+  #notebook-view {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  #editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid var(--black);
+    overflow: hidden;
+  }
+
+  #editor-header {
+    padding: 16px 24px;
+    border-bottom: 1.5px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  #seed-title-input {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    border: none;
+    outline: none;
+    color: var(--black);
+    background: transparent;
+  }
+
+  #seed-title-input::placeholder { color: var(--gray-200); }
+
+  #phase-select {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--black);
+    padding: 5px 8px;
+    background: transparent;
+    color: var(--black);
+    cursor: pointer;
+    outline: none;
+  }
+
+  #delete-btn {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--gray-200);
+    padding: 5px 10px;
+    background: transparent;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  #delete-btn:hover { border-color: var(--red); color: var(--red); }
+
+  #tags-row {
+    padding: 10px 24px;
+    border-bottom: 1.5px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1.5px solid var(--gray-200);
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tag-remove {
+    cursor: pointer;
+    color: var(--gray-400);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .tag-remove:hover { color: var(--red); }
+
+  #tag-input {
+    font-family: var(--sans);
+    font-size: 11px;
+    border: none;
+    outline: none;
+    color: var(--black);
+    background: transparent;
+    width: 100px;
+  }
+
+  #tag-input::placeholder { color: var(--gray-400); }
+
+  #content-area {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  #seed-content-input {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    border: none;
+    outline: none;
+    resize: none;
+    color: var(--black);
+    background: transparent;
+  }
+
+  #seed-content-input::placeholder { color: var(--gray-200); }
+
+  /* ─── EMPTY STATE ─── */
+  #empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-200);
+    gap: 16px;
+  }
+
+  #empty-state .big-q {
+    font-size: 120px;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    color: var(--gray-200);
+  }
+
+  #empty-state p {
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+  }
+
+  /* ─── GARDENER PANEL ─── */
+  #gardener-pane {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  #gardener-header {
+    padding: 14px 20px;
+    border-bottom: 1.5px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  #gardener-header h3 {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gray-600);
+  }
+
+  #gardener-status {
+    font-size: 9px;
+    font-family: var(--mono);
+    color: var(--gray-400);
+  }
+
+  #gardener-status.thinking { color: var(--red); }
+
+  #gardener-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  #gardener-messages::-webkit-scrollbar { width: 3px; }
+  #gardener-messages::-webkit-scrollbar-thumb { background: var(--gray-200); }
+
+  .gardener-msg {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--gray-600);
+    padding: 12px;
+    border-left: 2px solid var(--gray-200);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .gardener-msg.insight { border-left-color: var(--red); color: var(--black); }
+  .gardener-msg.suggestion { border-left-color: var(--black); }
+  .gardener-msg.question { border-left-color: var(--gray-400); font-style: italic; }
+
+  .gardener-msg-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--gray-400);
+  }
+
+  .gardener-msg.insight .gardener-msg-label { color: var(--red); }
+  .gardener-msg.suggestion .gardener-msg-label { color: var(--black); }
+
+  #gardener-input-row {
+    padding: 12px 16px;
+    border-top: 1.5px solid var(--gray-200);
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  #gardener-input {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 7px 10px;
+    border: 1.5px solid var(--gray-200);
+    background: transparent;
+    color: var(--black);
+    outline: none;
+  }
+
+  #gardener-input:focus { border-color: var(--black); }
+  #gardener-input::placeholder { color: var(--gray-400); }
+
+  #gardener-send {
+    padding: 7px 12px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  #gardener-send:hover { background: var(--red); }
+
+  /* ─── CODE EDITOR MODE ─── */
+  #code-view {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  #code-sidebar {
+    width: 200px;
+    border-right: 2px solid var(--black);
+    display: flex;
+    flex-direction: column;
+    background: #0E0E0E;
+    flex-shrink: 0;
+  }
+
+  #code-sidebar-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #555;
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #new-file-btn {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.1s;
+    padding: 0;
+  }
+
+  #new-file-btn:hover { color: var(--red); }
+
+  #file-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .file-item {
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #777;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 2px solid transparent;
+    transition: all 0.1s;
+  }
+
+  .file-item:hover { background: #1a1a1a; color: #bbb; }
+  .file-item.active { background: #1a1a1a; color: #eee; border-left-color: var(--red); }
+
+  .file-icon { font-size: 12px; }
+
+  #code-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #111;
+    overflow: hidden;
+  }
+
+  #code-topbar {
+    padding: 0 20px;
+    height: 40px;
+    border-bottom: 1px solid #222;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  #active-filename {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #ccc;
+  }
+
+  #lang-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #555;
+    border: 1px solid #2a2a2a;
+    padding: 2px 7px;
+  }
+
+  #lang-select {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    color: #888;
+    padding: 3px 7px;
+    cursor: pointer;
+    outline: none;
+    margin-left: auto;
+  }
+
+  #lang-select option { background: #1a1a1a; }
+
+  #code-editor-wrap {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  #line-numbers {
+    padding: 20px 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    color: #333;
+    text-align: right;
+    user-select: none;
+    background: #111;
+    width: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    flex-shrink: 0;
+    border-right: 1px solid #1d1d1d;
+    overflow: hidden;
+    white-space: pre;
+  }
+
+  #code-textarea {
+    flex: 1;
+    padding: 20px 24px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    color: #D4D4D4;
+    caret-color: #aeafad;
+    background: #111;
+    border: none;
+    outline: none;
+    resize: none;
+    tab-size: 2;
+    overflow: auto;
+    white-space: pre;
+    overflow-wrap: normal;
+  }
+
+  #code-textarea::-webkit-scrollbar { width: 6px; height: 6px; }
+  #code-textarea::-webkit-scrollbar-thumb { background: #2a2a2a; }
+  #code-textarea::selection { background: rgba(100,120,200,0.35); }
+
+  /* ── Syntax token colours ── */
+  /* JS/TS — Material Palenight */
+  .tk-kw     { color: #C792EA; }
+  .tk-fn     { color: #82AAFF; }
+  .tk-str    { color: #C3E88D; }
+  .tk-num    { color: #F78C6C; }
+  .tk-cmt    { color: #546E7A; font-style: italic; }
+  .tk-op     { color: #89DDFF; }
+  .tk-cls    { color: #FFCB6B; }
+  .tk-bool   { color: #FF5874; }
+  .tk-prop   { color: #B2CCD6; }
+
+  /* Python — Monokai Pro */
+  .py-kw     { color: #FF6188; }
+  .py-fn     { color: #A9DC76; }
+  .py-builtin{ color: #78DCE8; }
+  .py-str    { color: #FFD866; }
+  .py-num    { color: #AB9DF2; }
+  .py-cmt    { color: #727072; font-style: italic; }
+  .py-deco   { color: #FC9867; }
+  .py-cls    { color: #78DCE8; }
+
+  /* HTML — One Dark */
+  .ht-tag    { color: #F07178; }
+  .ht-attr   { color: #FFCB6B; }
+  .ht-val    { color: #C3E88D; }
+  .ht-cmt    { color: #546E7A; font-style: italic; }
+  .ht-ent    { color: #89DDFF; }
+  .ht-dt     { color: #546E7A; }
+
+  /* CSS — Ocean Dark */
+  .cs-sel    { color: #F07178; }
+  .cs-prop   { color: #89DDFF; }
+  .cs-val    { color: #C3E88D; }
+  .cs-unit   { color: #F78C6C; }
+  .cs-var    { color: #FFCB6B; }
+  .cs-cmt    { color: #546E7A; font-style: italic; }
+  .cs-at     { color: #C792EA; }
+  .cs-hex    { color: #F78C6C; }
+
+  /* JSON — calm blues & greens */
+  .jn-key    { color: #82AAFF; }
+  .jn-str    { color: #C3E88D; }
+  .jn-num    { color: #F78C6C; }
+  .jn-bool   { color: #FF5874; }
+  .jn-null   { color: #546E7A; }
+
+  /* Markdown — editorial warmth */
+  .md-h1     { color: #FF5874; font-weight: 700; }
+  .md-h2     { color: #F07178; font-weight: 700; }
+  .md-h3     { color: #FFCB6B; font-weight: 700; }
+  .md-bold   { color: #FFFFFF; font-weight: 700; }
+  .md-em     { color: #C3E88D; font-style: italic; }
+  .md-code   { color: #89DDFF; background: #1d1d1d; }
+  .md-link   { color: #82AAFF; }
+  .md-hr     { color: #333; }
+  .md-li     { color: #FFCB6B; }
+
+  /* Shell — terminal green */
+  .sh-cmd    { color: #A9DC76; }
+  .sh-flag   { color: #FFCB6B; }
+  .sh-str    { color: #FFD866; }
+  .sh-cmt    { color: #727072; font-style: italic; }
+  .sh-var    { color: #78DCE8; }
+  .sh-op     { color: #FF6188; }
+
+  #code-statusbar {
+    padding: 0 20px;
+    height: 28px;
+    border-top: 1px solid #1d1d1d;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #444;
+    flex-shrink: 0;
+  }
+
+  #code-statusbar span { display: flex; align-items: center; gap: 6px; }
+  #cursor-pos { color: #666; }
+
+  /* ─── CODE GARDENER ─── */
+  #code-gardener-pane {
+    width: 280px;
+    border-left: 2px solid var(--black);
+    background: #0E0E0E;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  #code-gardener-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #222;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #code-gardener-status { color: var(--red); font-size: 9px; }
+
+  #code-gardener-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .code-gardener-msg {
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.6;
+    color: #666;
+    padding: 10px;
+    border-left: 2px solid #2a2a2a;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .code-gardener-msg.error { border-left-color: var(--red); color: #ff6b6b; }
+  .code-gardener-msg.tip { border-left-color: #555; color: #aaa; }
+  .code-gardener-msg.review { border-left-color: #888; color: #888; }
+
+  .code-gardener-label {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: #333;
+  }
+
+  .code-gardener-msg.error .code-gardener-label { color: var(--red); }
+  .code-gardener-msg.tip .code-gardener-label { color: #555; }
+
+  #code-gardener-input-row {
+    padding: 10px 12px;
+    border-top: 1px solid #222;
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  #code-gardener-input {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    color: #ccc;
+    outline: none;
+  }
+
+  #code-gardener-input:focus { border-color: #444; }
+  #code-gardener-input::placeholder { color: #333; }
+
+  #code-gardener-send {
+    padding: 6px 10px;
+    background: #222;
+    color: #888;
+    border: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  #code-gardener-send:hover { background: var(--red); color: var(--white); }
+
+  /* ─── HARVEST PANEL strip ─── */
+  #harvest-bar {
+    display: none;
+    border-top: 2px solid var(--black);
+    padding: 10px 24px;
+    background: var(--black);
+    color: var(--white);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  #harvest-bar.visible { display: flex; }
+
+  #export-group {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+
+  #harvest-export-btn {
+    padding: 6px 14px;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  #harvest-export-btn:hover { background: #c0001a; }
+
+  #export-format-toggle {
+    padding: 6px 10px;
+    background: #333;
+    color: var(--white);
+    border: none;
+    border-left: 1px solid #555;
+    font-family: var(--sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.1s;
+    line-height: 1;
+  }
+
+  #export-format-toggle:hover { background: #444; }
+
+  #export-dropdown {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    right: 0;
+    background: var(--white);
+    border: 2px solid var(--black);
+    min-width: 180px;
+    z-index: 100;
+    flex-direction: column;
+  }
+
+  #export-dropdown.open { display: flex; }
+
+  .export-option {
+    padding: 10px 14px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--black);
+    border: none;
+    background: transparent;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.1s;
+  }
+
+  .export-option:last-child { border-bottom: none; }
+  .export-option:hover { background: var(--gray-100); }
+  .export-option .ext { font-family: var(--mono); font-size: 9px; color: var(--gray-400); margin-left: auto; }
+
+  /* Code download button */
+  #code-download-btn {
+    margin-left: auto;
+    padding: 5px 12px;
+    background: transparent;
+    color: #888;
+    border: 1px solid #2a2a2a;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.1s;
+    text-transform: uppercase;
+  }
+
+  #code-download-btn:hover { background: var(--red); color: var(--white); border-color: var(--red); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .seed-item { animation: fadeIn 0.2s ease; }
+
+  /* ─── UTILITY ─── */
+  .hidden { display: none !important; }
+
+  /* ─── SCROLLBAR GLOBAL ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--gray-200); }
+
+  /* ─── SAVE INDICATOR ─── */
+  #save-indicator {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--gray-400);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    text-transform: uppercase;
+  }
+
+  #save-indicator.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div id="logo"><img src="data:image/png;base64,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" alt="Quaternuli logo"><span id="logo-text">QUATERNULI</span></div>
+  <div id="mode-toggle">
+    <button class="mode-btn active" data-mode="notebook" onclick="switchMode('notebook')">Notebook</button>
+    <button class="mode-btn" data-mode="code" onclick="switchMode('code')">Code</button>
+  </div>
+  <div id="topbar-meta">
+    <span>Seeds: <span id="seed-count">0</span></span>
+    <span id="harvest-count-meta" style="color:var(--red)"></span>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SIDEBAR (notebook mode) -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <input type="text" id="search-input" placeholder="Search seeds…" oninput="filterSeeds()">
+      <div id="phase-filter">
+        <button class="phase-chip active" data-phase="all" onclick="setPhaseFilter('all')">All</button>
+        <button class="phase-chip" data-phase="capture" onclick="setPhaseFilter('capture')">Cap</button>
+        <button class="phase-chip" data-phase="tend" onclick="setPhaseFilter('tend')">Tend</button>
+        <button class="phase-chip" data-phase="harvest" onclick="setPhaseFilter('harvest')">Harv</button>
+      </div>
+    </div>
+    <div id="seed-list"></div>
+    <button id="new-seed-btn" onclick="createNewSeed()">+ New Seed</button>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- NOTEBOOK VIEW -->
+    <div id="notebook-view">
+
+      <!-- EDITOR PANE -->
+      <div id="editor-pane">
+
+        <!-- EMPTY STATE -->
+        <div id="empty-state">
+          <div class="big-q">Q</div>
+          <p>Select a seed or create a new one</p>
+        </div>
+
+        <!-- EDITOR (hidden until seed selected) -->
+        <div id="editor-content" class="hidden" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+          <div id="editor-header">
+            <input type="text" id="seed-title-input" placeholder="Seed title…" oninput="onTitleChange()">
+            <select id="phase-select" onchange="onPhaseChange()">
+              <option value="capture">Capture</option>
+              <option value="tend">Tend</option>
+              <option value="harvest">Harvest</option>
+            </select>
+            <button id="delete-btn" onclick="deleteSeed()">Delete</button>
+          </div>
+          <div id="tags-row">
+            <span id="tags-container"></span>
+            <input type="text" id="tag-input" placeholder="+ tag…" onkeydown="onTagKeydown(event)">
+          </div>
+          <div id="content-area">
+            <textarea id="seed-content-input" placeholder="Plant your thought here. Raw, unfinished, half-formed — that's fine. The Gardener will help it grow." oninput="onContentChange()"></textarea>
+          </div>
+        </div>
+
+        <div id="harvest-bar">
+          <span>🌾</span>
+          <span>This seed is ready for harvest.</span>
+          <div id="export-group">
+            <button id="harvest-export-btn" onclick="exportSeed('md')">Export</button>
+            <button id="export-format-toggle" onclick="toggleExportDropdown(event)" title="Choose format">▾</button>
+            <div id="export-dropdown">
+              <button class="export-option" onclick="exportSeed('md')">Markdown <span class="ext">.md</span></button>
+              <button class="export-option" onclick="exportSeed('txt')">Plain Text <span class="ext">.txt</span></button>
+              <button class="export-option" onclick="exportSeed('html')">Styled HTML <span class="ext">.html</span></button>
+              <button class="export-option" onclick="exportSeed('json')">JSON <span class="ext">.json</span></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- GARDENER PANE -->
+      <div id="gardener-pane">
+        <div id="gardener-header">
+          <h3>The Gardener</h3>
+          <span id="gardener-status">idle</span>
+        </div>
+        <div id="gardener-messages">
+          <div class="gardener-msg insight">
+            <div class="gardener-msg-label">Welcome</div>
+            Select a seed and I'll help you tend it. I notice patterns, ask questions, and suggest connections between your thoughts.
+          </div>
+        </div>
+        <div id="gardener-input-row">
+          <input type="text" id="gardener-input" placeholder="Ask the Gardener…" onkeydown="onGardenerInput(event)">
+          <button id="gardener-send" onclick="sendToGardener()">→</button>
+        </div>
+      </div>
+
+    </div><!-- /notebook-view -->
+
+    <!-- CODE VIEW -->
+    <div id="code-view" class="hidden">
+
+      <!-- File sidebar -->
+      <div id="code-sidebar">
+        <div id="code-sidebar-header">
+          Files
+          <button id="new-file-btn" onclick="createNewFile()" title="New file">+</button>
+        </div>
+        <div id="file-list"></div>
+      </div>
+
+      <!-- Code editor -->
+      <div id="code-main">
+        <div id="code-topbar">
+          <span id="active-filename" style="font-family:var(--mono);font-size:12px;color:#ccc">untitled.js</span>
+          <span id="lang-badge">JS</span>
+          <select id="lang-select" onchange="onLangChange()">
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="python">Python</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="json">JSON</option>
+            <option value="markdown">Markdown</option>
+            <option value="shell">Shell</option>
+          </select>
+          <button id="code-download-btn" onclick="downloadCodeFile()" title="Download file">↓ Download</button>
+        </div>
+        <div id="code-editor-wrap">
+          <div id="line-numbers"></div>
+          <textarea id="code-textarea"
+              spellcheck="false"
+              autocorrect="off"
+              autocapitalize="off"
+              oninput="onCodeChange()"
+              onkeydown="onCodeKeydown(event)"
+              onscroll="syncHighlight()"
+              onclick="updateCursorPos()"
+              onkeyup="updateCursorPos()"
+              placeholder="// Start coding…"></textarea>
+        </div>
+        <div id="code-statusbar">
+          <span id="cursor-pos">Ln 1, Col 1</span>
+          <span id="char-count">0 chars</span>
+          <span id="line-total">1 lines</span>
+        </div>
+      </div>
+
+      <!-- Code Gardener -->
+      <div id="code-gardener-pane">
+        <div id="code-gardener-header">
+          Gardener
+          <span id="code-gardener-status"></span>
+        </div>
+        <div id="code-gardener-messages">
+          <div class="code-gardener-msg tip">
+            <div class="code-gardener-label">Ready</div>
+            Open a file or start coding. I'll review your code, spot issues, and suggest improvements.
+          </div>
+        </div>
+        <div id="code-gardener-input-row">
+          <input type="text" id="code-gardener-input" placeholder="Ask about the code…" onkeydown="onCodeGardenerInput(event)">
+          <button id="code-gardener-send" onclick="sendToCodeGardener()">→</button>
+        </div>
+      </div>
+
+    </div><!-- /code-view -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div id="save-indicator">Saved</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let seeds = JSON.parse(localStorage.getItem('quaternuli_seeds') || '[]');
+let codeFiles = JSON.parse(localStorage.getItem('quaternuli_files') || '[]');
+let currentMode = localStorage.getItem('quaternuli_mode') || 'notebook';
+let currentSeedId = localStorage.getItem('quaternuli_current_seed') || null;
+let currentFileId = localStorage.getItem('quaternuli_current_file') || null;
+let saveTimer = null;
+let gardenerTimer = null;
+
+// ─── INIT ─────────────────────────────────────────────────
+function init() {
+  if (seeds.length === 0) {
+    // Seed some example seeds
+    createSeed('The compounding nature of small rituals', 'capture',
+      'What if productivity isn\'t about doing more but about repeating tiny acts until they become invisible infrastructure? Morning pages. Cold water. One sentence before bed.',
+      ['philosophy', 'habit']);
+    createSeed('Quaternuli product vision', 'tend',
+      'A notebook that grows with you. Not just storage — cultivation. Seeds are half-formed thoughts. The Gardener tends them. Harvest is when they\'re ready to become something real.\n\nKey insight: most note apps are filing systems. This should feel like a garden.',
+      ['product', 'vision']);
+    createSeed('Swiss grid as cognitive model', 'harvest',
+      'The Swiss International Style isn\'t just aesthetic — it\'s epistemic. The grid enforces hierarchy. Forces you to know what matters most before you design. Maybe all thinking should start with a grid.\n\nMüller-Brockmann said the grid is not a cage but a framework for freedom. Apply to thought architecture.',
+      ['design', 'typography', 'philosophy']);
+  }
+
+  if (codeFiles.length === 0) {
+    createFile('main.js', 'javascript',
+`// Quaternuli seed processor
+// Transforms raw thoughts into structured output
+
+const seeds = [];
+
+function plantSeed(content, tags = []) {
+  const seed = {
+    id: crypto.randomUUID(),
+    content,
+    tags,
+    phase: 'capture',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  seeds.push(seed);
+  return seed;
+}
+
+function tendSeed(id, updates) {
+  const seed = seeds.find(s => s.id === id);
+  if (!seed) throw new Error(\`Seed \${id} not found\`);
+  Object.assign(seed, updates, { updatedAt: new Date().toISOString() });
+  return seed;
+}
+
+function harvestSeed(id) {
+  const seed = seeds.find(s => s.id === id);
+  if (!seed) throw new Error(\`Seed \${id} not found\`);
+  if (seed.phase !== 'harvest') throw new Error('Seed not ready for harvest');
+  return {
+    title: seed.content.split('\\n')[0],
+    body: seed.content,
+    tags: seed.tags,
+    exportedAt: new Date().toISOString(),
+  };
+}
+
+// Plant a new thought
+const mySeed = plantSeed(
+  'What if every API was designed\\nlike a conversation, not a contract?',
+  ['api', 'design', 'philosophy']
+);
+
+console.log('Seed planted:', mySeed.id);
+`);
+    createFile('gardener.py', 'python',
+`# Gardener — AI thought cultivator
+# Analyzes seeds and suggests connections
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import List, Optional
+import re
+
+@dataclass
+class Seed:
+    id: str
+    content: str
+    phase: str = 'capture'
+    tags: List[str] = field(default_factory=list)
+    created_at: datetime = field(default_factory=datetime.now)
+    maturity_score: float = 0.0
+
+class Gardener:
+    """The AI gardener that tends your thought seeds."""
+    
+    INSIGHT_PATTERNS = [
+        r'what if',
+        r'maybe',
+        r'i wonder',
+        r'the key insight',
+        r'pattern:',
+    ]
+    
+    def assess_maturity(self, seed: Seed) -> float:
+        """Score a seed's readiness for harvest (0–1)."""
+        score = 0.0
+        
+        # Length heuristic
+        word_count = len(seed.content.split())
+        score += min(word_count / 200, 0.3)
+        
+        # Structural markers
+        has_insight = any(
+            re.search(p, seed.content.lower())
+            for p in self.INSIGHT_PATTERNS
+        )
+        if has_insight:
+            score += 0.2
+        
+        # Tags signal intentionality
+        score += min(len(seed.tags) * 0.1, 0.2)
+        
+        # Newlines suggest structure
+        if '\\n' in seed.content:
+            score += 0.15
+        
+        return min(score, 1.0)
+    
+    def suggest_phase(self, seed: Seed) -> str:
+        maturity = self.assess_maturity(seed)
+        if maturity >= 0.7:
+            return 'harvest'
+        elif maturity >= 0.3:
+            return 'tend'
+        return 'capture'
+    
+    def generate_question(self, seed: Seed) -> Optional[str]:
+        """Generate a Socratic question to develop the seed."""
+        questions = [
+            "What's the most surprising implication of this?",
+            "If this were true, what would have to change?",
+            "What's the strongest objection to this idea?",
+            "Who else has thought about this, and differently?",
+            "What's the concrete, practical version of this?",
+        ]
+        # Simple rotation based on content length
+        idx = len(seed.content) % len(questions)
+        return questions[idx]
+
+
+# Usage
+gardener = Gardener()
+seed = Seed(
+    id='abc-123',
+    content='The best interfaces disappear.\\nWhen a tool is truly good, you forget it exists.',
+    tags=['design', 'ux']
+)
+
+print(f"Maturity: {gardener.assess_maturity(seed):.2f}")
+print(f"Suggested phase: {gardener.suggest_phase(seed)}")
+print(f"Question: {gardener.generate_question(seed)}")
+`);
+  }
+
+  switchMode(currentMode, true);
+  saveToStorage();
+  renderSeedList();
+  renderFileList();
+  updateSeedCount();
+
+  if (currentSeedId) {
+    loadSeed(currentSeedId);
+  }
+
+  if (currentFileId) {
+    loadFile(currentFileId);
+  }
+}
+
+// ─── STORAGE ──────────────────────────────────────────────
+function saveToStorage() {
+  localStorage.setItem('quaternuli_seeds', JSON.stringify(seeds));
+  localStorage.setItem('quaternuli_files', JSON.stringify(codeFiles));
+  localStorage.setItem('quaternuli_mode', currentMode);
+  localStorage.setItem('quaternuli_current_seed', currentSeedId || '');
+  localStorage.setItem('quaternuli_current_file', currentFileId || '');
+  showSaveIndicator();
+}
+
+function showSaveIndicator() {
+  const el = document.getElementById('save-indicator');
+  el.classList.add('visible');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => el.classList.remove('visible'), 1200);
+}
+
+function debouncedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToStorage, 600);
+}
+
+// ─── MODE SWITCHING ───────────────────────────────────────
+function switchMode(mode, skipSave) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('sidebar').style.display = mode === 'notebook' ? 'flex' : 'none';
+  document.getElementById('notebook-view').classList.toggle('hidden', mode !== 'notebook');
+  document.getElementById('code-view').classList.toggle('hidden', mode !== 'code');
+  if (!skipSave) saveToStorage();
+}
+
+// ─── SEEDS CRUD ───────────────────────────────────────────
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+function createSeed(title, phase, content, tags) {
+  const seed = {
+    id: generateId(),
+    title: title || '',
+    phase: phase || 'capture',
+    content: content || '',
+    tags: tags || [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  seeds.unshift(seed);
+  return seed;
+}
+
+function createNewSeed() {
+  const seed = createSeed('', 'capture', '', []);
+  saveToStorage();
+  renderSeedList();
+  updateSeedCount();
+  loadSeed(seed.id);
+  setTimeout(() => document.getElementById('seed-title-input').focus(), 50);
+}
+
+function deleteSeed() {
+  if (!currentSeedId) return;
+  if (!confirm('Delete this seed?')) return;
+  seeds = seeds.filter(s => s.id !== currentSeedId);
+  currentSeedId = null;
+  saveToStorage();
+  renderSeedList();
+  updateSeedCount();
+  showEmptyState();
+}
+
+function getCurrentSeed() {
+  return seeds.find(s => s.id === currentSeedId);
+}
+
+function loadSeed(id) {
+  currentSeedId = id;
+  localStorage.setItem('quaternuli_current_seed', id);
+  const seed = seeds.find(s => s.id === id);
+  if (!seed) return;
+
+  document.getElementById('empty-state').classList.add('hidden');
+  document.getElementById('editor-content').classList.remove('hidden');
+  document.getElementById('editor-content').style.display = 'flex';
+
+  document.getElementById('seed-title-input').value = seed.title;
+  document.getElementById('phase-select').value = seed.phase;
+  document.getElementById('seed-content-input').value = seed.content;
+
+  renderTags(seed.tags);
+  updateHarvestBar(seed);
+  highlightSeedInList(id);
+  triggerGardener(seed);
+}
+
+function showEmptyState() {
+  document.getElementById('empty-state').classList.remove('hidden');
+  document.getElementById('editor-content').style.display = 'none';
+  document.getElementById('harvest-bar').classList.remove('visible');
+}
+
+function onTitleChange() {
+  const seed = getCurrentSeed();
+  if (!seed) return;
+  seed.title = document.getElementById('seed-title-input').value;
+  seed.updatedAt = new Date().toISOString();
+  renderSeedList();
+  debouncedSave();
+}
+
+function onPhaseChange() {
+  const seed = getCurrentSeed();
+  if (!seed) return;
+  seed.phase = document.getElementById('phase-select').value;
+  seed.updatedAt = new Date().toISOString();
+  updateHarvestBar(seed);
+  renderSeedList();
+  updateSeedCount();
+  debouncedSave();
+}
+
+function onContentChange() {
+  const seed = getCurrentSeed();
+  if (!seed) return;
+  seed.content = document.getElementById('seed-content-input').value;
+  seed.updatedAt = new Date().toISOString();
+  debouncedSave();
+  clearTimeout(gardenerTimer);
+  gardenerTimer = setTimeout(() => triggerGardener(seed, true), 3000);
+}
+
+// ─── TAGS ─────────────────────────────────────────────────
+function renderTags(tags) {
+  const container = document.getElementById('tags-container');
+  container.innerHTML = tags.map(t =>
+    `<span class="tag">${t}<span class="tag-remove" onclick="removeTag('${t}')">×</span></span>`
+  ).join('');
+}
+
+function onTagKeydown(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(',', '');
+    if (!val) return;
+    const seed = getCurrentSeed();
+    if (!seed) return;
+    if (!seed.tags.includes(val)) {
+      seed.tags.push(val);
+      renderTags(seed.tags);
+      debouncedSave();
+    }
+    e.target.value = '';
+  }
+}
+
+function removeTag(tag) {
+  const seed = getCurrentSeed();
+  if (!seed) return;
+  seed.tags = seed.tags.filter(t => t !== tag);
+  renderTags(seed.tags);
+  debouncedSave();
+}
+
+// ─── SEED LIST ────────────────────────────────────────────
+let phaseFilter = 'all';
+
+function setPhaseFilter(phase) {
+  phaseFilter = phase;
+  document.querySelectorAll('.phase-chip').forEach(c => c.classList.toggle('active', c.dataset.phase === phase));
+  renderSeedList();
+}
+
+function filterSeeds() {
+  renderSeedList();
+}
+
+function renderSeedList() {
+  const query = document.getElementById('search-input').value.toLowerCase();
+  let filtered = seeds.filter(s => {
+    const matchPhase = phaseFilter === 'all' || s.phase === phaseFilter;
+    const matchQuery = !query || s.title.toLowerCase().includes(query) || s.content.toLowerCase().includes(query) || s.tags.some(t => t.includes(query));
+    return matchPhase && matchQuery;
+  });
+
+  const list = document.getElementById('seed-list');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="padding:24px 16px;font-size:11px;color:var(--gray-400);text-align:center;letter-spacing:0.08em;text-transform:uppercase;">No seeds found</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(s => {
+    const date = new Date(s.updatedAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+    const titleDisplay = s.title || '(untitled)';
+    return `<div class="seed-item${s.id === currentSeedId ? ' active' : ''}" data-phase="${s.phase}" onclick="loadSeed('${s.id}')">
+      <div class="seed-item-phase">${s.phase}</div>
+      <div class="seed-item-title">${titleDisplay}</div>
+      <div class="seed-item-date">${date}</div>
+    </div>`;
+  }).join('');
+}
+
+function highlightSeedInList(id) {
+  document.querySelectorAll('.seed-item').forEach(el => {
+    el.classList.toggle('active', el.onclick?.toString().includes(id));
+  });
+  renderSeedList();
+}
+
+function updateSeedCount() {
+  document.getElementById('seed-count').textContent = seeds.length;
+  const harvested = seeds.filter(s => s.phase === 'harvest').length;
+  document.getElementById('harvest-count-meta').textContent = harvested > 0 ? `${harvested} harvested` : '';
+}
+
+// ─── HARVEST ──────────────────────────────────────────────
+function updateHarvestBar(seed) {
+  const bar = document.getElementById('harvest-bar');
+  if (seed.phase === 'harvest') bar.classList.add('visible');
+  else bar.classList.remove('visible');
+}
+
+function toggleExportDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('export-dropdown');
+  dd.classList.toggle('open');
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', () => {
+  document.getElementById('export-dropdown')?.classList.remove('open');
+});
+
+function triggerDownload(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function slugify(str) {
+  return (str || 'seed').toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').substring(0, 60);
+}
+
+function exportSeed(format) {
+  const seed = getCurrentSeed();
+  if (!seed) return;
+  document.getElementById('export-dropdown').classList.remove('open');
+
+  const date = new Date(seed.updatedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const slug = slugify(seed.title);
+  const tagsStr = seed.tags.join(', ') || '—';
+
+  if (format === 'md') {
+    const content = `# ${seed.title}\n\n**Phase:** ${seed.phase}  \n**Tags:** ${tagsStr}  \n**Date:** ${date}\n\n---\n\n${seed.content}`;
+    triggerDownload(content, slug + '.md', 'text/markdown');
+
+  } else if (format === 'txt') {
+    const content = [
+      seed.title.toUpperCase(),
+      '='.repeat(Math.min(seed.title.length, 60)),
+      '',
+      `Phase: ${seed.phase}`,
+      `Tags:  ${tagsStr}`,
+      `Date:  ${date}`,
+      '',
+      '─'.repeat(40),
+      '',
+      seed.content,
+    ].join('\n');
+    triggerDownload(content, slug + '.txt', 'text/plain');
+
+  } else if (format === 'html') {
+    const content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${seed.title} — Quaternuli</title>
+<style>
+  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 720px; margin: 60px auto; padding: 0 24px; color: #111; background: #fff; line-height: 1.7; }
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .meta { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 32px; display: flex; gap: 24px; }
+  .meta span b { color: #E8001D; }
+  hr { border: none; border-top: 2px solid #111; margin: 32px 0; }
+  .body { font-size: 16px; white-space: pre-wrap; }
+  .tag { display: inline-block; border: 1.5px solid #e8e8e8; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 8px; margin-right: 6px; color: #555; }
+  footer { margin-top: 64px; font-size: 11px; color: #ccc; letter-spacing: 0.08em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<h1>${seed.title}</h1>
+<div class="meta">
+  <span>Phase: <b>${seed.phase}</b></span>
+  <span>${date}</span>
+</div>
+<div>${seed.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+<hr>
+<div class="body">${seed.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+<footer>Exported from Quaternuli</footer>
+</body>
+</html>`;
+    triggerDownload(content, slug + '.html', 'text/html');
+
+  } else if (format === 'json') {
+    const obj = {
+      id: seed.id,
+      title: seed.title,
+      phase: seed.phase,
+      tags: seed.tags,
+      content: seed.content,
+      createdAt: seed.createdAt,
+      updatedAt: seed.updatedAt,
+      exportedAt: new Date().toISOString(),
+      source: 'quaternuli',
+    };
+    triggerDownload(JSON.stringify(obj, null, 2), slug + '.json', 'application/json');
+  }
+}
+
+function downloadCodeFile() {
+  const file = getCurrentFile();
+  if (!file) return;
+  triggerDownload(file.content, file.name, 'text/plain');
+}
+
+// ─── GARDENER (notebook) ──────────────────────────────────
+const GARDENER_RESPONSES = {
+  insight: [
+    "There's a tension here worth pulling on — you're describing both a constraint and a freedom.",
+    "The strongest part of this idea is the implicit critique of the status quo. Make it explicit.",
+    "I notice you haven't asked the adversarial question yet: who would argue this is wrong, and why?",
+    "This connects to your '{related}' seed. The through-line might be the relationship between structure and emergence.",
+    "You're circling something. The key is probably in the metaphor you keep using.",
+  ],
+  suggestion: [
+    "Try writing the one-sentence version. Force yourself to compress.",
+    "What's the concrete example that proves this? Start there, then generalize.",
+    "Consider moving this to 'tend' — it's ready for more deliberate shaping.",
+    "Add a counter-argument section. The best ideas survive their strongest objections.",
+    "Break this into two seeds — there are two distinct thoughts here competing for space.",
+  ],
+  question: [
+    "What would change if this idea were completely wrong?",
+    "Who is this for? Not abstractly — name a specific person.",
+    "What's the oldest version of this idea you've ever encountered?",
+    "If you had to bet on this being true, what odds would you give?",
+    "What do you want to happen as a result of having this thought?",
+  ],
+};
+
+const CODE_GARDENER_RESPONSES = {
+  tip: [
+    "Consider adding error handling around the main operations — failures should be explicit, not silent.",
+    "The function names are clear, but the parameter names could be more descriptive.",
+    "This pattern looks like it could benefit from early returns to reduce nesting.",
+    "Think about the edge cases: empty arrays, null values, concurrent calls.",
+    "Good separation of concerns here. Consider whether this belongs in its own module.",
+  ],
+  review: [
+    "Overall structure is clean. The main concern is testability — pure functions are easier to verify.",
+    "The logic is correct, but there's an opportunity to make the intent clearer with a well-named helper.",
+    "I'd look at the data flow between these two functions — there might be an implicit coupling.",
+    "Naming is good. Comments are minimal — consider adding intent, not just description.",
+    "The algorithm is O(n²) in the worst case. For small inputs fine, but worth noting.",
+  ],
+  error: [
+    "Potential null reference on line — check that the value exists before accessing properties.",
+    "This async function is missing await — it will return a Promise, not the resolved value.",
+    "Unused variable detected. Either use it or remove it to avoid confusion.",
+    "The loop condition might cause an off-by-one error. Double-check the boundary.",
+    "Possible race condition if this is called concurrently.",
+  ],
+};
+
+function getRandomFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function addGardenerMessage(type, text, pane = 'notebook') {
+  const containerId = pane === 'code' ? 'code-gardener-messages' : 'gardener-messages';
+  const container = document.getElementById(containerId);
+
+  const labels = {
+    insight: 'Insight', suggestion: 'Suggestion', question: 'Question',
+    tip: 'Tip', review: 'Review', error: 'Potential Issue'
+  };
+
+  const msgClass = pane === 'code' ? 'code-gardener-msg' : 'gardener-msg';
+  const labelClass = pane === 'code' ? 'code-gardener-label' : 'gardener-msg-label';
+
+  const div = document.createElement('div');
+  div.className = `${msgClass} ${type}`;
+  div.innerHTML = `<div class="${labelClass}">${labels[type] || type}</div>${text}`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function setGardenerStatus(status, pane = 'notebook') {
+  const id = pane === 'code' ? 'code-gardener-status' : 'gardener-status';
+  const el = document.getElementById(id);
+  el.textContent = status;
+  el.classList.toggle('thinking', status === 'thinking…');
+}
+
+function triggerGardener(seed, isEdit = false) {
+  if (!seed || seed.content.length < 20) return;
+  setGardenerStatus('thinking…');
+  const delay = isEdit ? 1200 : 800;
+
+  setTimeout(() => {
+    setGardenerStatus('idle');
+    const roll = Math.random();
+    let type, pool;
+    if (roll < 0.35) { type = 'insight'; pool = GARDENER_RESPONSES.insight; }
+    else if (roll < 0.70) { type = 'suggestion'; pool = GARDENER_RESPONSES.suggestion; }
+    else { type = 'question'; pool = GARDENER_RESPONSES.question; }
+
+    // Find a related seed title for placeholders
+    const otherSeeds = seeds.filter(s => s.id !== seed.id && s.title);
+    const related = otherSeeds.length > 0 ? otherSeeds[Math.floor(Math.random() * otherSeeds.length)].title : 'another seed';
+    const text = getRandomFrom(pool).replace('{related}', related);
+    addGardenerMessage(type, text, 'notebook');
+
+    // Suggest phase advancement if content is long enough
+    if (!isEdit && seed.content.length > 300 && seed.phase === 'capture') {
+      setTimeout(() => {
+        addGardenerMessage('suggestion', 'This seed has grown. Consider moving it to <strong>Tend</strong> for more deliberate shaping.', 'notebook');
+      }, 1000);
+    }
+  }, delay);
+}
+
+function onGardenerInput(e) {
+  if (e.key === 'Enter') sendToGardener();
+}
+
+function sendToGardener() {
+  const input = document.getElementById('gardener-input');
+  const query = input.value.trim();
+  if (!query) return;
+  input.value = '';
+
+  // Echo user message styled differently
+  const container = document.getElementById('gardener-messages');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'gardener-msg';
+  userDiv.style.background = 'var(--gray-100)';
+  userDiv.style.borderLeftColor = 'var(--gray-200)';
+  userDiv.innerHTML = `<div class="gardener-msg-label">You</div>${query}`;
+  container.appendChild(userDiv);
+  container.scrollTop = container.scrollHeight;
+
+  setGardenerStatus('thinking…');
+  setTimeout(() => {
+    setGardenerStatus('idle');
+    const responses = [
+      ...GARDENER_RESPONSES.insight,
+      ...GARDENER_RESPONSES.suggestion,
+      ...GARDENER_RESPONSES.question
+    ];
+    const seed = getCurrentSeed();
+    const otherSeeds = seeds.filter(s => s.id !== (seed?.id));
+    const related = otherSeeds.length > 0 ? otherSeeds[0].title : 'another idea';
+    const text = getRandomFrom(responses).replace('{related}', related);
+    const types = ['insight', 'suggestion', 'question'];
+    const type = getRandomFrom(types);
+    addGardenerMessage(type, text, 'notebook');
+  }, 900 + Math.random() * 600);
+}
+
+// ─── CODE FILES ───────────────────────────────────────────
+function createFile(name, lang, content) {
+  const file = {
+    id: generateId(),
+    name: name || 'untitled.js',
+    lang: lang || 'javascript',
+    content: content || '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  codeFiles.push(file);
+  return file;
+}
+
+function createNewFile() {
+  const name = prompt('File name:', 'untitled.js');
+  if (!name) return;
+  const ext = name.split('.').pop();
+  const langMap = { js: 'javascript', ts: 'typescript', py: 'python', html: 'html', css: 'css', json: 'json', md: 'markdown', sh: 'shell' };
+  const lang = langMap[ext] || 'javascript';
+  const file = createFile(name, lang, '');
+  saveToStorage();
+  renderFileList();
+  loadFile(file.id);
+}
+
+function getCurrentFile() {
+  return codeFiles.find(f => f.id === currentFileId);
+}
+
+function loadFile(id) {
+  currentFileId = id;
+  localStorage.setItem('quaternuli_current_file', id);
+  const file = codeFiles.find(f => f.id === id);
+  if (!file) return;
+
+  document.getElementById('active-filename').textContent = file.name;
+  document.getElementById('lang-select').value = file.lang;
+  document.getElementById('lang-badge').textContent = file.lang.substring(0, 4).toUpperCase();
+  document.getElementById('code-textarea').value = file.content;
+  updateLineNumbers();
+  updateCursorPos();
+  renderFileList();
+  triggerCodeGardener(file);
+}
+
+function renderFileList() {
+  const iconMap = {
+    javascript: '🟨', typescript: '🔷', python: '🐍', html: '🌐',
+    css: '🎨', json: '📋', markdown: '📝', shell: '⬛'
+  };
+
+  document.getElementById('file-list').innerHTML = codeFiles.map(f =>
+    `<div class="file-item${f.id === currentFileId ? ' active' : ''}" onclick="loadFile('${f.id}')">
+      <span class="file-icon">${iconMap[f.lang] || '📄'}</span>
+      <span>${f.name}</span>
+    </div>`
+  ).join('');
+}
+
+function onLangChange() {
+  const file = getCurrentFile();
+  if (!file) return;
+  file.lang = document.getElementById('lang-select').value;
+  document.getElementById('lang-badge').textContent = file.lang.substring(0, 4).toUpperCase();
+  file.updatedAt = new Date().toISOString();
+  renderFileList();
+  debouncedSave();
+}
+
+function onCodeChange() {
+  const file = getCurrentFile();
+  if (!file) return;
+  file.content = document.getElementById('code-textarea').value;
+  file.updatedAt = new Date().toISOString();
+  updateLineNumbers();
+  updateCursorPos();
+  debouncedSave();
+  clearTimeout(gardenerTimer);
+  gardenerTimer = setTimeout(() => triggerCodeGardener(file, true), 4000);
+}
+
+function onCodeKeydown(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ta = e.target;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + '  ' + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + 2;
+    onCodeChange();
+  }
+}
+
+function updateLineNumbers() {
+  const ta = document.getElementById('code-textarea');
+  const lines = ta.value.split('\n').length;
+  document.getElementById('line-numbers').textContent = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+  document.getElementById('line-total').textContent = `${lines} lines`;
+  document.getElementById('char-count').textContent = `${ta.value.length} chars`;
+}
+
+function syncHighlight() {
+  const ta = document.getElementById('code-textarea');
+  const hl = document.getElementById('code-highlight');
+  const ln = document.getElementById('line-numbers');
+  if (hl) { hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; }
+  if (ln) ln.scrollTop = ta.scrollTop;
+}
+
+function syncLineNumbers() { syncHighlight(); }
+
+function updateCursorPos() {
+  const ta = document.getElementById('code-textarea');
+  const val = ta.value.substring(0, ta.selectionStart);
+  const lines = val.split('\n');
+  const line = lines.length;
+  const col = lines[lines.length - 1].length + 1;
+  document.getElementById('cursor-pos').textContent = `Ln ${line}, Col ${col}`;
+}
+
+// ─── CODE GARDENER ────────────────────────────────────────
+let codeGardenerTimer = null;
+
+function triggerCodeGardener(file, isEdit = false) {
+  if (!file || file.content.length < 30) return;
+  setGardenerStatus('thinking…', 'code');
+  const delay = isEdit ? 1500 : 800;
+
+  setTimeout(() => {
+    setGardenerStatus('', 'code');
+    const roll = Math.random();
+    let type, pool;
+    if (roll < 0.25) { type = 'error'; pool = CODE_GARDENER_RESPONSES.error; }
+    else if (roll < 0.6) { type = 'tip'; pool = CODE_GARDENER_RESPONSES.tip; }
+    else { type = 'review'; pool = CODE_GARDENER_RESPONSES.review; }
+    addGardenerMessage(type, getRandomFrom(pool), 'code');
+  }, delay);
+}
+
+function onCodeGardenerInput(e) {
+  if (e.key === 'Enter') sendToCodeGardener();
+}
+
+function sendToCodeGardener() {
+  const input = document.getElementById('code-gardener-input');
+  const query = input.value.trim();
+  if (!query) return;
+  input.value = '';
+
+  const container = document.getElementById('code-gardener-messages');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'code-gardener-msg';
+  userDiv.innerHTML = `<div class="code-gardener-label" style="color:#555">You</div><span style="color:#aaa">${query}</span>`;
+  container.appendChild(userDiv);
+  container.scrollTop = container.scrollHeight;
+
+  setGardenerStatus('…', 'code');
+  setTimeout(() => {
+    setGardenerStatus('', 'code');
+    const all = [...CODE_GARDENER_RESPONSES.tip, ...CODE_GARDENER_RESPONSES.review];
+    addGardenerMessage('tip', getRandomFrom(all), 'code');
+  }, 800 + Math.random() * 700);
+}
+
+
+// ─── SYNTAX HIGHLIGHTING ──────────────────────────────────
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlightCode(lang) {
+  return; // disabled — textarea shows raw text directly
+  const ta = document.getElementById('code-textarea');
+  const hl = document.getElementById('code-highlight');
+  if (!hl || !ta) return;
+  const code = ta.value;
+  let highlighted;
+  switch(lang) {
+    case 'javascript':
+    case 'typescript': highlighted = highlightJS(code); break;
+    case 'python':     highlighted = highlightPython(code); break;
+    case 'html':       highlighted = highlightHTML(code); break;
+    case 'css':        highlighted = highlightCSS(code); break;
+    case 'json':       highlighted = highlightJSON(code); break;
+    case 'markdown':   highlighted = highlightMarkdown(code); break;
+    case 'shell':      highlighted = highlightShell(code); break;
+    default:           highlighted = escHtml(code);
+  }
+  hl.innerHTML = highlighted;
+  syncHighlight();
+}
+
+// ── JavaScript / TypeScript ──
+function highlightJS(code) {
+  const keywords = /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|class|extends|import|export|default|from|of|in|typeof|instanceof|void|delete|throw|try|catch|finally|async|await|yield|static|get|set|super|this|null|undefined|true|false|NaN|Infinity)\b/g;
+  const builtins = /\b(console|Math|Object|Array|String|Number|Boolean|Promise|JSON|Date|RegExp|Error|Map|Set|Symbol|Proxy|Reflect|parseInt|parseFloat|isNaN|isFinite|setTimeout|setInterval|clearTimeout|clearInterval|fetch|document|window|navigator|localStorage|sessionStorage|require|module|exports|process|__dirname|__filename)\b/g;
+
+  const lines = code.split('\n');
+  return lines.map(line => {
+    // Single-line comment
+    const cIdx = findCommentStart(line);
+    let main = cIdx >= 0 ? line.slice(0, cIdx) : line;
+    let comment = cIdx >= 0 ? line.slice(cIdx) : '';
+
+    main = tokenizeStrings(main, 'tk-str');
+    main = main.replace(keywords, (m) => {
+      if (m === 'true' || m === 'false' || m === 'null' || m === 'undefined' || m === 'NaN' || m === 'Infinity')
+        return `<span class="tk-bool">${m}</span>`;
+      return `<span class="tk-kw">${m}</span>`;
+    });
+    main = main.replace(builtins, '<span class="tk-fn">$&</span>');
+    main = main.replace(/(?<![\w$])(\d+\.?\d*(?:[eE][+-]?\d+)?|0x[0-9a-fA-F]+|0b[01]+|0o[0-7]+)(?![\w$])/g, '<span class="tk-num">$&</span>');
+    main = main.replace(/([+\-*/%=!<>&|^~?:]+)/g, '<span class="tk-op">$&</span>');
+    // function names: word followed by (
+    main = main.replace(/([a-zA-Z_$][\w$]*)(?=\s*\()/g, (m, p1) => {
+      if (p1 === 'if' || p1 === 'for' || p1 === 'while' || p1 === 'switch' || p1 === 'catch') return m;
+      return `<span class="tk-fn">${p1}</span>`;
+    });
+    // class names after new/extends/class
+    main = main.replace(/(?<=\b(?:new|extends|class)\s+)([A-Z][\w$]*)/g, '<span class="tk-cls">$&</span>');
+
+    if (comment) comment = `<span class="tk-cmt">${escHtml(comment)}</span>`;
+    return main + comment;
+  }).join('\n');
+}
+
+function findCommentStart(line) {
+  let inStr = false, strChar = '';
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i], prev = line[i-1];
+    if (!inStr && (c === '"' || c === "'" || c === '`')) { inStr = true; strChar = c; }
+    else if (inStr && c === strChar && prev !== '\\') inStr = false;
+    else if (!inStr && c === '/' && line[i+1] === '/') return i;
+  }
+  return -1;
+}
+
+function tokenizeStrings(code, cls) {
+  return code.replace(/(["'\`])(?:(?!\1)[^\\\n]|\\.)*\1/g, m =>
+    `<span class="${cls}">${m}</span>`
+  );
+}
+
+// ── Python ──
+function highlightPython(code) {
+  const kw = /\b(False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b/g;
+  const builtins = /\b(print|len|range|type|isinstance|int|str|float|list|dict|set|tuple|bool|open|input|super|property|staticmethod|classmethod|abs|all|any|bin|chr|dir|divmod|enumerate|eval|filter|format|getattr|hasattr|hash|help|hex|id|iter|map|max|min|next|oct|ord|pow|repr|reversed|round|setattr|slice|sorted|sum|vars|zip)\b/g;
+
+  const lines = code.split('\n');
+  return lines.map(line => {
+    // Comment
+    const cIdx = findPyCommentStart(line);
+    let main = cIdx >= 0 ? line.slice(0, cIdx) : line;
+    let comment = cIdx >= 0 ? line.slice(cIdx) : '';
+
+    // Decorator
+    if (main.trimStart().startsWith('@')) {
+      main = main.replace(/(@[\w.]+)/, '<span class="py-deco">$1</span>');
+    }
+    main = tokenizeStrings(main, 'py-str');
+    main = main.replace(kw, '<span class="py-kw">$&</span>');
+    main = main.replace(builtins, '<span class="py-builtin">$&</span>');
+    main = main.replace(/\b(\d+\.?\d*(?:[eE][+-]?\d+)?|0x[0-9a-fA-F]+|0b[01]+|0o[0-7]+)\b/g, '<span class="py-num">$&</span>');
+    // def name
+    main = main.replace(/(?<=\bdef\s+)([a-zA-Z_][\w]*)/, '<span class="py-fn">$1</span>');
+    // class name
+    main = main.replace(/(?<=\bclass\s+)([A-Z][\w]*)/, '<span class="py-cls">$1</span>');
+
+    if (comment) comment = `<span class="py-cmt">${escHtml(comment)}</span>`;
+    return main + comment;
+  }).join('\n');
+}
+
+function findPyCommentStart(line) {
+  let inStr = false, strChar = '';
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (!inStr && (c === '"' || c === "'")) { inStr = true; strChar = c; }
+    else if (inStr && c === strChar) inStr = false;
+    else if (!inStr && c === '#') return i;
+  }
+  return -1;
+}
+
+// ── HTML ──
+function highlightHTML(code) {
+  return escHtml(code)
+    // comments
+    .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="ht-cmt">$1</span>')
+    // doctype
+    .replace(/(&lt;!DOCTYPE[^&]*&gt;)/gi, '<span class="ht-dt">$1</span>')
+    // closing tags
+    .replace(/(&lt;\/[a-zA-Z][\w:-]*&gt;)/g, '<span class="ht-tag">$1</span>')
+    // opening tags with attributes
+    .replace(/(&lt;)([a-zA-Z][\w:-]*)([^&]*?)(\/&gt;|&gt;)/g, (m, lt, tag, attrs, gt) => {
+      const highlightedAttrs = attrs
+        .replace(/([a-zA-Z][\w-]*)(?==)/g, '<span class="ht-attr">$1</span>')
+        .replace(/(=)(["'])(.*?)/g, `$1<span class="ht-val">$2$3$2</span>`);
+      return `<span class="ht-tag">${lt}${tag}</span>${highlightedAttrs}<span class="ht-tag">${gt}</span>`;
+    });
+}
+
+// ── CSS ──
+function highlightCSS(code) {
+  const lines = code.split('\n');
+  return lines.map(line => {
+    // Comments
+    if (line.match(/\/\*/)) {
+      return `<span class="cs-cmt">${escHtml(line)}</span>`;
+    }
+    let l = escHtml(line);
+    // @rules
+    l = l.replace(/(@[\w-]+)/g, '<span class="cs-at">$1</span>');
+    // selectors (lines without colon or with { )
+    if (l.includes('{') && !l.includes(':')) {
+      l = l.replace(/([^{]+)({)/, (m, sel, br) => `<span class="cs-sel">${sel}</span>${br}`);
+    }
+    // properties: value; inside rules
+    l = l.replace(/([a-zA-Z-]+)(?=\s*:)(?!.*{)/g, '<span class="cs-prop">$1</span>');
+    // hex colors
+    l = l.replace(/(#[0-9a-fA-F]{3,8})\b/g, '<span class="cs-hex">$1</span>');
+    // CSS variables
+    l = l.replace(/(--[\w-]+)/g, '<span class="cs-var">$1</span>');
+    // values (after colon, before semicolon)
+    l = l.replace(/(?<=:\s*)([^;<{]+)(?=;)/g, '<span class="cs-val">$&</span>');
+    // numbers with units
+    l = l.replace(/(-?\d+\.?\d*)(px|em|rem|%|vh|vw|vmin|vmax|pt|cm|mm|s|ms|deg|fr)/g,
+      '<span class="cs-unit">$1$2</span>');
+    return l;
+  }).join('\n');
+}
+
+// ── JSON ──
+function highlightJSON(code) {
+  return escHtml(code)
+    .replace(/("(?:[^"\\]|\\.)*")\s*:/g, '<span class="jn-key">$1</span>:')
+    .replace(/:\s*("(?:[^"\\]|\\.)*")/g, ': <span class="jn-str">$1</span>')
+    .replace(/:\s*(-?\d+\.?\d*(?:[eE][+-]?\d+)?)/g, ': <span class="jn-num">$1</span>')
+    .replace(/:\s*(true|false)/g, ': <span class="jn-bool">$1</span>')
+    .replace(/:\s*(null)/g, ': <span class="jn-null">$1</span>')
+    // array number values
+    .replace(/(?<=[\[,]\s*)(-?\d+\.?\d*)(?=\s*[,\]])/g, '<span class="jn-num">$1</span>')
+    .replace(/(?<=[\[,]\s*)(true|false)(?=\s*[,\]])/g, '<span class="jn-bool">$1</span>');
+}
+
+// ── Markdown ──
+function highlightMarkdown(code) {
+  const lines = code.split('\n');
+  return lines.map(line => {
+    const e = escHtml(line);
+    if (/^#{3}\s/.test(line)) return `<span class="md-h3">${e}</span>`;
+    if (/^#{2}\s/.test(line)) return `<span class="md-h2">${e}</span>`;
+    if (/^#{1}\s/.test(line)) return `<span class="md-h1">${e}</span>`;
+    if (/^[-*]{3,}$/.test(line.trim())) return `<span class="md-hr">${e}</span>`;
+    if (/^[\*\-\+]\s/.test(line) || /^\d+\.\s/.test(line))
+      return e.replace(/^([\*\-\+]|\d+\.)/, '<span class="md-li">$&</span>');
+    if (/^&gt;/.test(e)) return `<span class="md-em">${e}</span>`;
+    if (/^```/.test(line)) return `<span class="md-code">${e}</span>`;
+
+    let l = e;
+    l = l.replace(/`([^`]+)`/g, '<span class="md-code">$&</span>');
+    l = l.replace(/\*\*([^*]+)\*\*/g, '<span class="md-bold">**$1**</span>');
+    l = l.replace(/\*([^*]+)\*/g, '<span class="md-em">*$1*</span>');
+    l = l.replace(/\[([^\]]+)\]\([^)]+\)/g, '<span class="md-link">$&</span>');
+    return l;
+  }).join('\n');
+}
+
+// ── Shell ──
+function highlightShell(code) {
+  const lines = code.split('\n');
+  return lines.map(line => {
+    if (line.trimStart().startsWith('#')) return `<span class="sh-cmt">${escHtml(line)}</span>`;
+    let l = escHtml(line);
+    l = l.replace(/\$([{(]?[A-Za-z_][\w]*[})]?)/g, '<span class="sh-var">$$$1</span>');
+    l = l.replace(/(["'])(?:(?!\1)[^\\]|\\.)*\1/g, '<span class="sh-str">$&</span>');
+    l = l.replace(/(\|\||&&|&gt;&gt;|&gt;|&lt;|\|)/g, '<span class="sh-op">$1</span>');
+    l = l.replace(/(--?[\w-]+)/g, '<span class="sh-flag">$1</span>');
+    l = l.replace(/^(\s*)([a-z][\w.-]*)/, (m, sp, cmd) => `${sp}<span class="sh-cmd">${cmd}</span>`);
+    return l;
+  }).join('\n');
+}
+
+// ─── LOGO COLOUR ─────────────────────────────────────────────
+function colorLogoU() {
+  const el = document.getElementById('logo-text');
+  if (!el) return;
+
+  // Measure Q width and U width using a canvas
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const style = window.getComputedStyle(el);
+  ctx.font = style.font || 'bold 13px Helvetica Neue, Helvetica, Arial, sans-serif';
+
+  const full   = ctx.measureText('QUATERNULI').width;
+  const before = ctx.measureText('Q').width;          // width before U
+  const uWidth = ctx.measureText('U').width;           // width of U
+
+  const start = (before / full * 100).toFixed(3);
+  const end   = ((before + uWidth) / full * 100).toFixed(3);
+
+  el.style.backgroundImage = [
+    'linear-gradient(90deg,',
+    `  #111111 0%,`,
+    `  #111111 ${start}%,`,
+    `  #E8001D ${start}%,`,
+    `  #E8001D ${end}%,`,
+    `  #111111 ${end}%,`,
+    `  #111111 100%`,
+    ')'
+  ].join(' ');
+}
+
+// ─── BOOT ─────────────────────────────────────────────────
+init();
+colorLogoU();
+</script>
+</body>
+</html>
