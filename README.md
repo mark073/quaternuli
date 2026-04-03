@@ -31,7 +31,7 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 ## 📸 Demo
 
 > A standalone UI preview (no API key required, Gardener is simulated):
-> **[demo.html](./demo.html)** — download and open in any browser
+> **[demo.html](https://mark073.github.io/quaternuli/demo.html)** — open in any browser
 
 > Live app (Gardener fully functional):
 > **[quaternuli.xyz](https://quaternuli.xyz)** *(coming soon)*
@@ -163,7 +163,7 @@ Any platform that supports Node.js and Next.js works — Netlify, Railway, Rende
 - [ ] Mobile responsive layout
 - [ ] Multi-user / shared seeds
 - [ ] Authentication (Clerk / NextAuth)
-- [ ] Slovenian language UI
+
 
 ---
 
