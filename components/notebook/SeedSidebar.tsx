@@ -11,7 +11,12 @@ const PHASES: { value: SeedPhase | 'all'; label: string }[] = [
   { value: 'harvest', label: 'Harv' },
 ]
 
-export default function SeedSidebar() {
+interface SeedSidebarProps {
+  // On mobile: called when user taps a seed, so parent can switch to editor panel
+  onSeedSelect?: () => void
+}
+
+export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
   const {
     seeds, currentSeedId, seedFilter, seedSearch,
     setCurrentSeed, setSeedFilter, setSeedSearch,
@@ -30,10 +35,16 @@ export default function SeedSidebar() {
   async function handleNewSeed() {
     const seed = await createSeed()
     setCurrentSeed(seed.id)
+    onSeedSelect?.()
+  }
+
+  function handleSeedClick(id: string) {
+    setCurrentSeed(id)
+    onSeedSelect?.()
   }
 
   return (
-    <aside className="w-64 border-r-2 border-swiss-black flex flex-col flex-shrink-0 overflow-hidden">
+    <aside className="w-full lg:w-64 border-r-0 lg:border-r-2 border-swiss-black flex flex-col flex-shrink-0 overflow-hidden h-full">
       {/* Search + filter */}
       <div className="p-2 border-b border-swiss-gray200 flex flex-col gap-2">
         <input
@@ -77,7 +88,7 @@ export default function SeedSidebar() {
             return (
               <div
                 key={seed.id}
-                onClick={() => setCurrentSeed(seed.id)}
+                onClick={() => handleSeedClick(seed.id)}
                 className={`px-4 py-3 cursor-pointer border-l-[3px] border-b border-b-swiss-gray100 transition-all
                   ${isActive ? 'border-l-swiss-red bg-swiss-gray100' : 'border-l-transparent hover:bg-swiss-gray100'}`}
               >

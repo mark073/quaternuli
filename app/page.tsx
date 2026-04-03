@@ -1,18 +1,21 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from '@/lib/store'
 import TopBar from '@/components/TopBar'
 import NotebookView from '@/components/notebook/NotebookView'
 import CodeView from '@/components/code/CodeView'
+import MobileNav from '@/components/MobileNav'
 import { seedFixtures, fileFixtures } from '@/lib/fixtures'
+
+export type MobilePanel = 'sidebar' | 'editor' | 'gardener'
 
 export default function Page() {
   const { hydrate, hydrated, mode, seeds, files, createSeed, updateSeed, createFile, updateFile } = useStore()
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel>('sidebar')
 
   useEffect(() => {
     hydrate().then(async () => {
-      // Seed example data on first load
       const { seeds: s, files: f } = useStore.getState()
       if (s.length === 0) {
         for (const fixture of seedFixtures) {
@@ -44,8 +47,21 @@ export default function Page() {
     <div className="flex flex-col h-screen overflow-hidden">
       <TopBar />
       <div className="flex flex-1 overflow-hidden">
-        {mode === 'notebook' ? <NotebookView /> : <CodeView />}
+        {mode === 'notebook'
+          ? <NotebookView mobilePanel={mobilePanel} onMobilePanelChange={setMobilePanel} />
+          : <CodeView />
+        }
       </div>
+      {/* Mobile bottom nav — notebook mode only */}
+      {mode === 'notebook' && (
+        <MobileNav
+          active={mobilePanel}
+          onChange={(panel) => {
+            setMobilePanel(panel)
+          }}
+          seedCount={seeds.length}
+        />
+      )}
     </div>
   )
 }

@@ -5,7 +5,12 @@ import { useStore } from '@/lib/store'
 import { exportSeed } from '@/lib/export'
 import type { SeedPhase } from '@/lib/types'
 
-export default function SeedEditor() {
+interface SeedEditorProps {
+  // Tablet: renders a Gardener toggle button in the header toolbar
+  gardenerToggle?: React.ReactNode
+}
+
+export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
   const { seeds, currentSeedId, updateSeed, deleteSeed, setCurrentSeed } = useStore()
   const seed = seeds.find(s => s.id === currentSeedId) ?? null
 
@@ -18,7 +23,6 @@ export default function SeedEditor() {
   const saveTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   const flashTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
-  // Sync local state when seed changes
   useEffect(() => {
     if (!seed) return
     setLocalTitle(seed.title)
@@ -86,27 +90,31 @@ export default function SeedEditor() {
   if (!seed) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center border-r-2 border-swiss-black">
-        <div className="text-[120px] font-bold leading-none text-swiss-gray200 select-none tracking-tighter">Q</div>
-        <p className="text-2xs text-swiss-gray400 uppercase tracking-widest mt-4">Select a seed or create a new one</p>
+        <div className="text-[80px] md:text-[120px] font-bold leading-none text-swiss-gray200 select-none tracking-tighter">Q</div>
+        <p className="text-2xs text-swiss-gray400 uppercase tracking-widest mt-4 text-center px-6">
+          Select a seed or create a new one
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col border-r-2 border-swiss-black overflow-hidden relative">
+    <div className="flex-1 flex flex-col border-r-0 lg:border-r-2 border-swiss-black overflow-hidden relative">
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b border-swiss-gray200 flex-shrink-0">
+      <div className="flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 border-b border-swiss-gray200 flex-shrink-0">
         <input
           type="text"
           value={localTitle}
           onChange={onTitleChange}
           placeholder="Seed title…"
-          className="flex-1 font-sans font-bold text-lg tracking-tightest border-none outline-none bg-transparent text-swiss-black placeholder-swiss-gray200"
+          className="flex-1 font-sans font-bold text-base md:text-lg tracking-tightest border-none outline-none bg-transparent text-swiss-black placeholder-swiss-gray200 min-w-0"
         />
+        {/* Tablet Gardener toggle — injected from NotebookView */}
+        {gardenerToggle}
         <select
           value={seed.phase}
           onChange={onPhaseChange}
-          className="font-sans font-bold text-2xs tracking-wider uppercase border border-swiss-black px-2 py-1.5 bg-transparent text-swiss-black outline-none cursor-pointer"
+          className="font-sans font-bold text-2xs tracking-wider uppercase border border-swiss-black px-2 py-1.5 bg-transparent text-swiss-black outline-none cursor-pointer flex-shrink-0"
         >
           <option value="capture">Capture</option>
           <option value="tend">Tend</option>
@@ -114,14 +122,14 @@ export default function SeedEditor() {
         </select>
         <button
           onClick={handleDelete}
-          className="font-bold text-2xs tracking-wider uppercase border border-swiss-gray200 px-2.5 py-1.5 text-swiss-gray400 hover:border-swiss-red hover:text-swiss-red transition-colors"
+          className="font-bold text-2xs tracking-wider uppercase border border-swiss-gray200 px-2.5 py-1.5 text-swiss-gray400 hover:border-swiss-red hover:text-swiss-red transition-colors flex-shrink-0"
         >
           Delete
         </button>
       </div>
 
       {/* Tags */}
-      <div className="flex items-center flex-wrap gap-2 px-6 py-2.5 border-b border-swiss-gray200 flex-shrink-0 min-h-[40px]">
+      <div className="flex items-center flex-wrap gap-2 px-4 md:px-6 py-2.5 border-b border-swiss-gray200 flex-shrink-0 min-h-[40px]">
         {localTags.map(tag => (
           <span key={tag} className="flex items-center gap-1 border border-swiss-gray200 font-bold text-2xs tracking-wider uppercase px-2 py-0.5 text-swiss-gray600">
             {tag}
@@ -139,7 +147,7 @@ export default function SeedEditor() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6">
         <textarea
           value={localContent}
           onChange={onContentChange}
@@ -150,9 +158,9 @@ export default function SeedEditor() {
 
       {/* Harvest bar */}
       {seed.phase === 'harvest' && (
-        <div className="flex items-center gap-4 px-6 py-2.5 bg-swiss-black border-t-2 border-swiss-black flex-shrink-0">
+        <div className="flex items-center gap-4 px-4 md:px-6 py-2.5 bg-swiss-black border-t-2 border-swiss-black flex-shrink-0">
           <span className="text-lg">🌾</span>
-          <span className="font-bold text-2xs tracking-wider uppercase text-white">Ready for harvest</span>
+          <span className="font-bold text-2xs tracking-wider uppercase text-white hidden sm:inline">Ready for harvest</span>
           <div className="ml-auto flex items-center gap-0">
             <button
               onClick={() => exportSeed(seed, 'md')}

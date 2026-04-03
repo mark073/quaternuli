@@ -51,7 +51,12 @@ function GardenerMsg({ msg }: { msg: GardenerMessage }) {
   )
 }
 
-export default function GardenerPanel() {
+interface GardenerPanelProps {
+  // Mobile: stretch to full width instead of fixed w-72
+  fullWidth?: boolean
+}
+
+export default function GardenerPanel({ fullWidth = false }: GardenerPanelProps) {
   const { currentSeedId, seeds, gardenerMessages, gardenerStreaming } = useStore()
   const { send } = useNotebookGardener()
   const [input, setInput] = useState('')
@@ -62,12 +67,10 @@ export default function GardenerPanel() {
   const seed = seeds.find(s => s.id === currentSeedId) ?? null
   const messages = currentSeedId ? (gardenerMessages[currentSeedId] ?? []) : []
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, messages[messages.length - 1]?.content])
 
-  // Auto-trigger Gardener when a seed is first opened (once per seed)
   useEffect(() => {
     if (!seed || autoTriggered.current === seed.id) return
     if (messages.length > 0) { autoTriggered.current = seed.id; return }
@@ -94,7 +97,7 @@ export default function GardenerPanel() {
   }
 
   return (
-    <div className="w-72 flex flex-col flex-shrink-0 overflow-hidden border-l-0">
+    <div className={`flex flex-col flex-shrink-0 overflow-hidden border-l-0 ${fullWidth ? 'w-full' : 'w-72'}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-swiss-gray200 flex-shrink-0">
         <h3 className="font-bold text-2xs tracking-widest uppercase text-swiss-gray600">The Gardener</h3>

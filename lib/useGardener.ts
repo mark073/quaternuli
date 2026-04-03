@@ -39,9 +39,17 @@ async function streamGardener(
   onDone: () => void,
   onError: (err: string) => void,
 ) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+
+  // Use user's own API key if stored in localStorage
+  const userKey = typeof window !== 'undefined'
+    ? localStorage.getItem('quaternuli_api_key')
+    : null
+  if (userKey) headers['X-Api-Key'] = userKey
+
   const res = await fetch('/api/gardener', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(req),
   })
 
