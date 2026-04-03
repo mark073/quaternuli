@@ -34,7 +34,7 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 > **[demo.html](https://mark073.github.io/quaternuli/demo.html)** — open in any browser
 
 > Live app (Gardener fully functional):
-> **[quaternuli.xyz](https://quaternuli.xyz)** *(coming soon)*
+> **[quaternuli.xyz](https://quaternuli.xyz)** 
 
 ---
 
