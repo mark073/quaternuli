@@ -9,7 +9,7 @@ interface MobileNavProps {
 }
 
 export default function MobileNav({ active, onChange, seedCount }: MobileNavProps) {
-  const tabs: { id: MobilePanel; label: string; icon: string }[] = [
+  const tabs: { id: MobilePanel; label: string; }[] = [
     { id: 'sidebar',  label: 'Seeds' },
     { id: 'editor',   label: 'Editor' },
     { id: 'gardener', label: 'Gardener' },
