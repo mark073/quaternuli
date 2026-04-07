@@ -27,7 +27,7 @@ export default function MobileNav({ active, onChange, seedCount }: MobileNavProp
               : 'text-swiss-gray400 hover:text-swiss-black hover:bg-swiss-gray100'
             }`}
         >
-          <span className="text-base leading-none">{tab.icon}</span>
+          
           <span>{tab.id === 'sidebar' ? `Seeds${seedCount > 0 ? ` (${seedCount})` : ''}` : tab.label}</span>
         </button>
       ))}
