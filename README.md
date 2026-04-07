@@ -15,7 +15,7 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 
 ---
 
-## ✨ Features
+## Features
 
 - **Seed notebook** — capture raw, unfinished thoughts without pressure
 - **Three phases** — Capture → Tend → Harvest, with automatic saving
@@ -28,7 +28,7 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 
 ---
 
-## 📸 Demo
+## Demo
 
 > A standalone UI preview (no API key required, Gardener is simulated):
 > **[demo.html](https://mark073.github.io/quaternuli/demo.html)** — open in any browser
@@ -38,7 +38,7 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -69,7 +69,7 @@ Open [http://localhost:3000](http://localhost:3000) — three example seeds are 
 
 ---
 
-## 📖 Documentation
+## Documentation
 
 | Document | Description |
 |---|---|
@@ -79,7 +79,7 @@ Open [http://localhost:3000](http://localhost:3000) — three example seeds are 
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 quaternuli/
@@ -114,7 +114,7 @@ quaternuli/
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -128,7 +128,7 @@ quaternuli/
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 | Variable | Required | Description |
 |---|---|---|
@@ -138,7 +138,7 @@ quaternuli/
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Vercel (recommended)
 
@@ -155,7 +155,7 @@ Any platform that supports Node.js and Next.js works — Netlify, Railway, Rende
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Import seeds from JSON
 - [ ] Seed linking and graph view
@@ -167,7 +167,7 @@ Any platform that supports Node.js and Next.js works — Netlify, Railway, Rende
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome. Please open an issue first to discuss what you'd like to change.
 
@@ -179,13 +179,13 @@ Contributions are welcome. Please open an issue first to discuss what you'd like
 
 ---
 
-## 📄 License
+## License
 
 MIT — see [LICENSE](./LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [Anthropic](https://anthropic.com) for Claude
 - [CodeMirror](https://codemirror.net) for the editor engine
