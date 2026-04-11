@@ -10,12 +10,11 @@ export default function TopBar() {
 
   return (
     <header className="flex items-stretch border-b-2 border-swiss-black h-12 flex-shrink-0">
-      {/* Logo */}
+      {/* Logo — icon only on mobile, short on sm, full on md+ */}
       <div className="flex items-center gap-2 pl-3 pr-3 md:pr-4 border-r-2 border-swiss-black font-sans font-bold text-base tracking-[0] uppercase select-none whitespace-nowrap">
         <Image src="/logo.png" alt="Quaternuli logo" width={30} height={30} className="flex-shrink-0" />
-        {/* Full wordmark on md+, just Q on mobile */}
-        <span className="hidden sm:inline">Q<span className="text-swiss-red">U</span>ATERNULI</span>
-        <span className="sm:hidden">Q<span className="text-swiss-red">U</span></span>
+        <span className="hidden sm:inline md:hidden">Q<span className="text-swiss-red">U</span></span>
+        <span className="hidden md:inline">Q<span className="text-swiss-red">U</span>ATERNULI</span>
       </div>
 
       {/* Mode toggle */}
@@ -42,15 +41,17 @@ export default function TopBar() {
       </div>
 
       {/* Meta */}
-      <div className="flex items-center px-3 md:px-5 gap-3 md:gap-6 ml-auto font-sans text-2xs tracking-wider text-swiss-gray400 uppercase">
+      <div className="flex items-center px-2 md:px-5 gap-2 md:gap-6 ml-auto font-sans text-2xs tracking-wider text-swiss-gray400 uppercase">
         <span>
           <span className="hidden sm:inline">Seeds: </span>
-          <span className="font-bold text-swiss-red">{seeds.length}</span>
+          <span className="font-bold text-swiss-black">{seeds.length}</span>
         </span>
         {harvested > 0 && (
           <span className="text-swiss-red font-bold hidden sm:inline">{harvested} harvested</span>
         )}
-        <ApiKeySettings />
+        <div className="flex items-center">
+          <ApiKeySettings />
+        </div>
       </div>
     </header>
   )

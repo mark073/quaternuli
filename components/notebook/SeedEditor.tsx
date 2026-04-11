@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useStore } from '@/lib/store'
 import { exportSeed } from '@/lib/export'
-import type { SeedPhase } from '@/lib/types'
+import type { ExportFormat, SeedPhase } from '@/lib/types'
 
 interface SeedEditorProps {
   // Tablet: renders a Gardener toggle button in the header toolbar
@@ -19,6 +19,7 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
   const [localTags, setLocalTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [exportOpen, setExportOpen] = useState(false)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [savedFlash, setSavedFlash] = useState(false)
   const saveTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   const flashTimer = useRef<NodeJS.Timeout | undefined>(undefined)
@@ -87,6 +88,17 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
     setCurrentSeed(null)
   }
 
+  async function handleExport(fmt: ExportFormat) {
+    if (!seed || exporting) return
+    setExporting(fmt)
+    setExportOpen(false)
+    try {
+      await exportSeed(seed, fmt)
+    } finally {
+      setExporting(null)
+    }
+  }
+
   if (!seed) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center border-r-2 border-swiss-black">
@@ -97,6 +109,15 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
       </div>
     )
   }
+
+  const exportFormats: { fmt: ExportFormat; label: string; ext: string }[] = [
+    { fmt: 'md',   label: 'Markdown',   ext: '.md'   },
+    { fmt: 'txt',  label: 'Plain Text', ext: '.txt'  },
+    { fmt: 'html', label: 'Styled HTML',ext: '.html' },
+    { fmt: 'pdf',  label: 'PDF',        ext: '.pdf'  },
+    { fmt: 'docx', label: 'Word',       ext: '.docx' },
+    { fmt: 'json', label: 'JSON',       ext: '.json' },
+  ]
 
   return (
     <div className="flex-1 flex flex-col border-r-0 lg:border-r-2 border-swiss-black overflow-hidden relative">
@@ -159,32 +180,34 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
       {/* Harvest bar */}
       {seed.phase === 'harvest' && (
         <div className="flex items-center gap-4 px-4 md:px-6 py-2.5 bg-swiss-black border-t-2 border-swiss-black flex-shrink-0">
-          <span className="text-lg">🌾</span>
+          <span className="text-lg"></span>
           <span className="font-bold text-2xs tracking-wider uppercase text-white hidden sm:inline">Ready for harvest</span>
           <div className="ml-auto flex items-center gap-0">
             <button
-              onClick={() => exportSeed(seed, 'md')}
-              className="px-4 py-1.5 bg-swiss-red text-white font-bold text-2xs tracking-wider uppercase hover:bg-red-700 transition-colors"
+              onClick={() => handleExport('md')}
+              disabled={!!exporting}
+              className="px-4 py-1.5 bg-swiss-red text-white font-bold text-2xs tracking-wider uppercase hover:bg-red-700 transition-colors disabled:opacity-60"
             >
-              Export
+              {exporting ? '…' : 'Export'}
             </button>
             <div className="relative">
               <button
                 onClick={() => setExportOpen(v => !v)}
-                className="px-2.5 py-1.5 bg-[#333] text-white font-bold text-sm hover:bg-[#444] transition-colors border-l border-[#555]"
+                disabled={!!exporting}
+                className="px-2.5 py-1.5 bg-[#333] text-white font-bold text-sm hover:bg-[#444] transition-colors border-l border-[#555] disabled:opacity-60"
               >
                 ▾
               </button>
               {exportOpen && (
-                <div className="absolute bottom-full right-0 mb-1.5 bg-white border-2 border-swiss-black min-w-[180px] flex flex-col z-50">
-                  {(['md','txt','html','json'] as const).map(fmt => (
+                <div className="absolute bottom-full right-0 mb-1.5 bg-white border-2 border-swiss-black min-w-[200px] flex flex-col z-50">
+                  {exportFormats.map(({ fmt, label, ext }) => (
                     <button
                       key={fmt}
-                      onClick={() => { exportSeed(seed, fmt); setExportOpen(false) }}
+                      onClick={() => handleExport(fmt)}
                       className="flex items-center justify-between px-3.5 py-2.5 font-bold text-2xs tracking-wider uppercase text-swiss-black hover:bg-swiss-gray100 border-b border-swiss-gray200 last:border-0 transition-colors"
                     >
-                      <span>{{ md:'Markdown', txt:'Plain Text', html:'Styled HTML', json:'JSON' }[fmt]}</span>
-                      <span className="font-mono text-2xs text-swiss-gray400">.{fmt}</span>
+                      <span>{label}</span>
+                      <span className="font-mono text-2xs text-swiss-gray400">{ext}</span>
                     </button>
                   ))}
                 </div>

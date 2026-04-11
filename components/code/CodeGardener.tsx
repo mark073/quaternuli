@@ -44,7 +44,11 @@ function CodeGardenerMsg({ msg }: { msg: GardenerMessage }) {
   )
 }
 
-export default function CodeGardener() {
+interface CodeGardenerProps {
+  fullWidth?: boolean
+}
+
+export default function CodeGardener({ fullWidth = false }: CodeGardenerProps) {
   const { currentFileId, files, codeGardenerMessages, codeGardenerStreaming } = useStore()
   const { send } = useCodeGardener()
   const [input, setInput] = useState('')
@@ -55,12 +59,10 @@ export default function CodeGardener() {
   const file = files.find(f => f.id === currentFileId) ?? null
   const messages = currentFileId ? (codeGardenerMessages[currentFileId] ?? []) : []
 
-  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, messages[messages.length - 1]?.content])
 
-  // Auto-trigger on file open
   useEffect(() => {
     if (!file || autoTriggered.current === file.id) return
     if (messages.length > 0) { autoTriggered.current = file.id; return }
@@ -87,7 +89,7 @@ export default function CodeGardener() {
   }
 
   return (
-    <div className="w-72 flex flex-col flex-shrink-0 overflow-hidden bg-[#0E0E0E] border-l-2 border-swiss-black">
+    <div className={`flex flex-col overflow-hidden bg-[#0E0E0E] border-l-0 md:border-l-2 border-swiss-black min-h-0 h-full ${fullWidth ? 'w-full flex-1' : 'w-72 flex-shrink-0'}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#222]">
         <span className="font-mono font-bold text-[9px] tracking-[0.2em] uppercase text-[#444]">Gardener</span>

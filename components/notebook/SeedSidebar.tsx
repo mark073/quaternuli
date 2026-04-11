@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useStore } from '@/lib/store'
 import type { SeedPhase } from '@/lib/types'
+import ImportButton from '@/components/ImportButton'
 
 const PHASES: { value: SeedPhase | 'all'; label: string }[] = [
   { value: 'all',     label: 'All'  },
@@ -12,7 +13,6 @@ const PHASES: { value: SeedPhase | 'all'; label: string }[] = [
 ]
 
 interface SeedSidebarProps {
-  // On mobile: called when user taps a seed, so parent can switch to editor panel
   onSeedSelect?: () => void
 }
 
@@ -75,7 +75,7 @@ export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
         </div>
       </div>
 
-      {/* List */}
+      {/* List — flex-1 so it takes all available space */}
       <div className="flex-1 overflow-y-auto py-2">
         {filtered.length === 0 ? (
           <p className="px-4 py-6 text-2xs text-swiss-gray400 uppercase tracking-wider text-center">
@@ -106,13 +106,16 @@ export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
         )}
       </div>
 
-      {/* New seed button */}
-      <button
-        onClick={handleNewSeed}
-        className="mx-4 my-3 py-2.5 bg-swiss-black text-white font-bold text-2xs tracking-widest uppercase hover:bg-swiss-red transition-colors"
-      >
-        + New Seed
-      </button>
+      {/* Bottom actions — compact on mobile */}
+      <div className="flex-shrink-0 border-t border-swiss-gray200">
+        <button
+          onClick={handleNewSeed}
+          className="w-full mx-0 px-4 py-2 bg-swiss-black text-white font-bold text-2xs tracking-widest uppercase hover:bg-swiss-red transition-colors"
+        >
+          + New Seed
+        </button>
+        <ImportButton compact />
+      </div>
     </aside>
   )
 }

@@ -97,7 +97,7 @@ export default function GardenerPanel({ fullWidth = false }: GardenerPanelProps)
   }
 
   return (
-    <div className={`flex flex-col flex-shrink-0 overflow-hidden border-l-0 ${fullWidth ? 'w-full' : 'w-72'}`}>
+    <div className={`flex flex-col overflow-hidden border-l-0 h-full ${fullWidth ? 'w-full flex-1' : 'w-72 flex-shrink-0'}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-swiss-gray200 flex-shrink-0">
         <h3 className="font-bold text-2xs tracking-widest uppercase text-swiss-gray600">The Gardener</h3>

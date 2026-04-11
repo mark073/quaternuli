@@ -57,8 +57,11 @@ export default function ApiKeySettings() {
             ? 'border-swiss-gray200 text-swiss-gray400 hover:border-swiss-black hover:text-swiss-black'
             : 'border-swiss-red text-swiss-red hover:bg-swiss-red hover:text-white'}`}
       >
-        <span>{hasKey ? '⚙' : '⚙'}</span>
-        <span>{hasKey ? 'API Key ✓' : 'Add API Key'}</span>
+        <span>⚙</span>
+        {/* Full label on sm+, hidden on mobile */}
+        <span className="hidden sm:inline">
+          {hasKey ? 'API Key ✓' : 'Add API Key'}
+        </span>
       </button>
 
       {/* Dropdown panel */}
@@ -69,8 +72,8 @@ export default function ApiKeySettings() {
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
           />
-          {/* Panel */}
-          <div className="absolute top-full right-0 mt-2 w-96 bg-white border-2 border-swiss-black z-50 shadow-lg">
+          {/* Panel — full width on mobile, fixed width on sm+ */}
+          <div className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white border-2 border-swiss-black z-50 shadow-lg">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-swiss-gray200">
               <span className="font-bold text-2xs tracking-widest uppercase">Anthropic API Key</span>

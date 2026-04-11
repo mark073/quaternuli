@@ -7,12 +7,14 @@ import NotebookView from '@/components/notebook/NotebookView'
 import CodeView from '@/components/code/CodeView'
 import MobileNav from '@/components/MobileNav'
 import { seedFixtures, fileFixtures } from '@/lib/fixtures'
+import type { CodePanel } from '@/components/code/CodeView'
 
 export type MobilePanel = 'sidebar' | 'editor' | 'gardener'
 
 export default function Page() {
   const { hydrate, hydrated, mode, seeds, files, createSeed, updateSeed, createFile, updateFile } = useStore()
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('sidebar')
+  const [codeMobilePanel, setCodeMobilePanel] = useState<CodePanel>('files')
 
   useEffect(() => {
     hydrate().then(async () => {
@@ -49,18 +51,39 @@ export default function Page() {
       <div className="flex flex-1 overflow-hidden">
         {mode === 'notebook'
           ? <NotebookView mobilePanel={mobilePanel} onMobilePanelChange={setMobilePanel} />
-          : <CodeView />
+          : <CodeView mobilePanel={codeMobilePanel} onMobilePanelChange={setCodeMobilePanel} />
         }
       </div>
-      {/* Mobile bottom nav — notebook mode only */}
+
+      {/* Mobile bottom nav — notebook mode */}
       {mode === 'notebook' && (
         <MobileNav
           active={mobilePanel}
-          onChange={(panel) => {
-            setMobilePanel(panel)
-          }}
+          onChange={setMobilePanel}
           seedCount={seeds.length}
         />
+      )}
+
+      {/* Mobile bottom nav — code mode */}
+      {mode === 'code' && (
+        <nav className="md:hidden flex border-t-2 border-swiss-black bg-white flex-shrink-0">
+          {([
+            { panel: 'files',   label: 'Files'   },
+            { panel: 'editor',  label: 'Editor'  },
+            { panel: 'gardener',label: 'Gardener'},
+          ] as { panel: CodePanel; label: string }[]).map(({ panel, label }) => (
+            <button
+              key={panel}
+              onClick={() => setCodeMobilePanel(panel)}
+              className={`flex-1 py-3 font-bold text-2xs tracking-wider uppercase transition-colors
+                ${codeMobilePanel === panel
+                  ? 'bg-swiss-black text-white'
+                  : 'text-swiss-gray400 hover:text-swiss-black'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
       )}
     </div>
   )

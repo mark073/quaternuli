@@ -30,6 +30,7 @@ interface QuaternuliState {
   setSeedFilter: (f: SeedPhase | 'all') => void
   setSeedSearch: (q: string) => void
   createSeed: () => Promise<Seed>
+  importSeed: (seed: Seed) => Promise<void>
   updateSeed: (id: string, patch: Partial<Omit<Seed, 'id' | 'createdAt'>>) => Promise<void>
   deleteSeed: (id: string) => Promise<void>
 
@@ -103,6 +104,13 @@ export const useStore = create<QuaternuliState>((set, get) => ({
     await putSeed(seed)
     set((s) => ({ seeds: [seed, ...s.seeds] }))
     return seed
+  },
+
+  // Accepts a fully-formed Seed (from the importer) and persists it as-is.
+  // Prepends to the list so imported seeds appear at the top.
+  importSeed: async (seed) => {
+    await putSeed(seed)
+    set((s) => ({ seeds: [seed, ...s.seeds] }))
   },
 
   updateSeed: async (id, patch) => {

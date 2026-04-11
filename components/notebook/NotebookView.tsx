@@ -46,7 +46,7 @@ export default function NotebookView({ mobilePanel, onMobilePanelChange }: Noteb
                   ? 'bg-swiss-black text-white border-swiss-black'
                   : 'border-swiss-gray200 text-swiss-gray400 hover:border-swiss-black hover:text-swiss-black'}`}
             >
-              🌿 Gardener
+              Gardener
             </button>
           } />
         </div>

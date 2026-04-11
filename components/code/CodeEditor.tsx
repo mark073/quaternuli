@@ -130,7 +130,11 @@ const baseTheme = EditorView.theme({
   '.cm-editor':    { background: '#111 !important' },
 })
 
-export default function CodeEditor() {
+interface CodeEditorProps {
+  gardenerToggle?: React.ReactNode
+}
+
+export default function CodeEditor({ gardenerToggle }: CodeEditorProps) {
   const { files, currentFileId, updateFile } = useStore()
   const file = files.find(f => f.id === currentFileId) ?? null
 
@@ -232,9 +236,10 @@ export default function CodeEditor() {
             </option>
           ))}
         </select>
+        {gardenerToggle && <div className="ml-auto">{gardenerToggle}</div>}
         <button
           onClick={() => downloadFile(file.name, file.content)}
-          className="ml-auto font-mono text-2xs tracking-wider uppercase text-[#888] border border-[#2a2a2a] px-3 py-1 hover:bg-swiss-red hover:text-white hover:border-swiss-red transition-all"
+          className={`${gardenerToggle ? '' : 'ml-auto'} font-mono text-2xs tracking-wider uppercase text-[#888] border border-[#2a2a2a] px-3 py-1 hover:bg-swiss-red hover:text-white hover:border-swiss-red transition-all`}
         >
           ↓ Download
         </button>
