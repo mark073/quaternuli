@@ -157,10 +157,10 @@ Any platform that supports Node.js and Next.js works — Netlify, Railway, Rende
 
 ## Roadmap
 
-- [ ] Import seeds from JSON
+- [x] Import seeds from JSON
 - [ ] Seed linking and graph view
 - [ ] Gardener memory across seeds (multi-turn context)
-- [ ] Mobile responsive layout
+- [x] Mobile responsive layout
 - [ ] Multi-user / shared seeds
 - [ ] Authentication (Clerk / NextAuth)
 
