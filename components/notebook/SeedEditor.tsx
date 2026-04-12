@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useStore } from '@/lib/store'
 import { exportSeed } from '@/lib/export'
-import type { ExportFormat, SeedPhase } from '@/lib/types'
+import type { ExportFormat } from '@/lib/export'
+import type { SeedPhase } from '@/lib/types'
 
 interface SeedEditorProps {
   // Tablet: renders a Gardener toggle button in the header toolbar
