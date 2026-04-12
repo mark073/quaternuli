@@ -18,7 +18,6 @@ function triggerDownload(content: string | Uint8Array, filename: string, mimeTyp
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
-}
 
 function formatDate(seed: Seed) {
   return new Date(seed.updatedAt).toLocaleDateString('en-GB', {
