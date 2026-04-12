@@ -246,7 +246,7 @@ async function exportAsDocx(seed: Seed) {
                   bold: true,
                   color: '555555',
                   allCaps: true,
-                  border: { type: BorderStyle.SINGLE, size: 6, space: 4, color: lightGray },
+                  border: { style: BorderStyle.SINGLE, size: 6, space: 4, color: lightGray },
                 }),
                 ...(i < seed.tags.length - 1 ? [new TextRun({ text: '  ', size: 14 })] : []),
               ]),
