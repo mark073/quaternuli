@@ -9,13 +9,15 @@ function slug(str: string) {
 }
 
 function triggerDownload(content: string | Uint8Array, filename: string, mimeType: string) {
-  const blob = new Blob([content instanceof Uint8Array ? content.buffer : content], { type: mimeType })
+  const blobPart: BlobPart = typeof content === 'string' ? content : new Uint8Array(content)
+  const blob = new Blob([blobPart], { type: mimeType })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = filename
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
 }
 
 function formatDate(seed: Seed) {
