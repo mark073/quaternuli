@@ -1,7 +1,7 @@
 # QUATERNULI
 
 <p align="center">
-  <img src="./docs/images/logo.png" alt="Quaternuli logo" width="120" />
+  <img src="./docs/screenshots/hero.png" alt="Quaternuli — seed notebook and code editor" width="720" />
 </p>
 
 **A seed notebook for half-formed thoughts — with an AI thinking partner.**
@@ -28,13 +28,29 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 
 ---
 
+## Screenshots
+
+### Notebook — Seed in progress
+![Quaternuli notebook view showing a seed being developed with the Gardener responding](docs/screenshots/notebook-seed.png)
+
+### Notebook — Harvest panel
+![Quaternuli harvest panel with export and add API key options](docs/screenshots/notebook-harvest.png)
+
+### Code editor — with Code Gardener
+![Quaternuli code editor with syntax highlighting and Code Gardener panel](docs/screenshots/code-editor.png)
+
+### Mobile layout
+![Quaternuli mobile layout with bottom navigation](docs/screenshots/mobile.png)
+
+---
+
 ## Demo
 
 > A standalone UI preview (no API key required, Gardener is simulated):
 > **[demo.html](https://mark073.github.io/quaternuli/demo.html)** — open in any browser
 
 > Live app (Gardener fully functional):
-> **[quaternuli.xyz](https://quaternuli.xyz)** 
+> **[quaternuli.xyz/app](https://quaternuli.xyz/app)**
 
 ---
 
@@ -106,6 +122,7 @@ quaternuli/
 ├── docs/
 │   ├── images/
 │   │   └── logo.png            ← Quaternuli logo
+│   ├── screenshots/            ← App screenshots
 │   ├── ABOUT.md
 │   ├── FAQ.md
 │   └── HOW-TO.md
@@ -157,13 +174,18 @@ Any platform that supports Node.js and Next.js works — Netlify, Railway, Rende
 
 ## Roadmap
 
-- [x] Import seeds from JSON
-- [ ] Seed linking and graph view
-- [ ] Gardener memory across seeds (multi-turn context)
+- [x] Seed notebook with Capture → Tend → Harvest phases
+- [x] Gardener AI (streaming Claude integration)
+- [x] Code editor with per-language colour palettes
+- [x] Export to Markdown, plain text, HTML, JSON
 - [x] Mobile responsive layout
-- [ ] Multi-user / shared seeds
+- [x] Import seeds from JSON
+- [ ] Seed tagging and filtering
+- [ ] Gardener conversation history per seed
+- [ ] Seed linking and graph view
 - [ ] Authentication (Clerk / NextAuth)
-
+- [ ] Cloud sync across devices
+- [ ] Multi-user / shared seeds
 
 ---
 
