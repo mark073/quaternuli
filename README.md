@@ -1,6 +1,10 @@
 # QUATERNULI
 
 <p align="center">
+  <img src="./docs/images/logo.png" alt="Quaternuli logo" width="120" />
+</p>
+
+<p align="center">
   <img src="./docs/screenshots/hero.png" alt="Quaternuli — seed notebook and code editor" width="720" />
 </p>
 
@@ -34,7 +38,7 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 ![Quaternuli notebook view showing a seed being developed with the Gardener responding](docs/screenshots/notebook-seed.png)
 
 ### Notebook — Harvest panel
-![Quaternuli harvest panel with export and add API key options](docs/screenshots/notebook-harvest.png)
+![Quaternuli harvest panel with export options](docs/screenshots/notebook-harvest.png)
 
 ### Code editor — with Code Gardener
 ![Quaternuli code editor with syntax highlighting and Code Gardener panel](docs/screenshots/code-editor.png)
