@@ -9,14 +9,17 @@ interface MobileNavProps {
 }
 
 export default function MobileNav({ active, onChange, seedCount }: MobileNavProps) {
-  const tabs: { id: MobilePanel; label: string; }[] = [
-    { id: 'sidebar',  label: 'Seeds' },
-    { id: 'editor',   label: 'Editor' },
+  const tabs: { id: MobilePanel; label: string }[] = [
+    { id: 'sidebar',  label: 'Seeds'    },
+    { id: 'editor',   label: 'Editor'   },
     { id: 'gardener', label: 'Gardener' },
   ]
 
   return (
-    <nav className="flex border-t-2 border-swiss-black bg-white flex-shrink-0 lg:hidden">
+    <nav
+      className="flex border-t-2 border-swiss-black bg-white flex-shrink-0 lg:hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       {tabs.map(tab => (
         <button
           key={tab.id}
@@ -27,7 +30,6 @@ export default function MobileNav({ active, onChange, seedCount }: MobileNavProp
               : 'text-swiss-gray400 hover:text-swiss-black hover:bg-swiss-gray100'
             }`}
         >
-          
           <span>{tab.id === 'sidebar' ? `Seeds${seedCount > 0 ? ` (${seedCount})` : ''}` : tab.label}</span>
         </button>
       ))}

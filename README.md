@@ -24,9 +24,13 @@ Quaternuli is a dual-mode web app: a **seed notebook** that helps you capture, t
 - **Seed notebook** — capture raw, unfinished thoughts without pressure
 - **Three phases** — Capture → Tend → Harvest, with automatic saving
 - **The Gardener** — a real Claude AI that reads your seeds and responds with insights, Socratic questions, and suggestions, streaming word by word
+- **Gardener history** — conversation history per seed, persisted across page refreshes
 - **Code editor** — CodeMirror 6 with syntax highlighting for 8 languages, each with its own colour palette
 - **Code Gardener** — AI code review that spots bugs, suggests improvements, and answers questions about your code
-- **Export** — harvested seeds export as Markdown, plain text, styled HTML, or JSON
+- **Export** — harvested seeds export as Markdown, Obsidian-compatible Markdown, plain text, styled HTML, PDF, Word, or JSON
+- **Seed tagging** — tag seeds and filter by tag in the sidebar (AND logic with phase filter and search)
+- **Keyboard shortcuts** — `Mod+1/2/3` switch phases, `Mod+N` new seed, `Mod+S` save, `Mod+G` focus Gardener, `Mod+Shift+E` export
+- **Onboarding** — first-run walkthrough for new users
 - **Local-first** — all data stored in your browser's IndexedDB, nothing sent to any server except the Gardener's Claude API calls
 - **Swiss International Style** — tight grid, Helvetica typography, single red accent
 
@@ -109,17 +113,24 @@ quaternuli/
 │   └── layout.tsx
 ├── components/
 │   ├── TopBar.tsx
+│   ├── MobileNav.tsx           ← Mobile bottom nav
+│   ├── OnboardingModal.tsx     ← First-run onboarding
 │   ├── notebook/
 │   │   ├── SeedSidebar.tsx
 │   │   ├── SeedEditor.tsx
+│   │   ├── NotebookView.tsx
 │   │   └── GardenerPanel.tsx   ← Real Claude streaming
 │   └── code/
 │       ├── FileSidebar.tsx
 │       ├── CodeEditor.tsx      ← CodeMirror 6
+│       ├── CodeView.tsx
 │       └── CodeGardener.tsx    ← Real Claude streaming
+├── hooks/
+│   └── useKeyboardShortcuts.ts ← Global keyboard shortcut hook
 ├── lib/
 │   ├── store.ts                ← Zustand state
 │   ├── db.ts                   ← IndexedDB via idb
+│   ├── keyboard-shortcuts.ts   ← Shortcut registry
 │   ├── useGardener.ts          ← Streaming hooks
 │   ├── gardener-prompt.ts      ← System prompts
 │   └── export.ts               ← Export utilities
@@ -180,12 +191,14 @@ Any platform that supports Node.js and Next.js works — Netlify, Railway, Rende
 
 - [x] Seed notebook with Capture → Tend → Harvest phases
 - [x] Gardener AI (streaming Claude integration)
+- [x] Gardener conversation history per seed
 - [x] Code editor with per-language colour palettes
-- [x] Export to Markdown, plain text, HTML, JSON
+- [x] Export to Markdown, Obsidian, plain text, HTML, PDF, Word, JSON
 - [x] Mobile responsive layout
 - [x] Import seeds from JSON
-- [ ] Seed tagging and filtering
-- [ ] Gardener conversation history per seed
+- [x] Seed tagging and filtering
+- [x] Keyboard shortcuts
+- [x] Onboarding flow for new users
 - [ ] Seed linking and graph view
 - [ ] Authentication (Clerk / NextAuth)
 - [ ] Cloud sync across devices

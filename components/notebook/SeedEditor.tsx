@@ -7,11 +7,16 @@ import type { ExportFormat } from '@/lib/export'
 import type { SeedPhase } from '@/lib/types'
 
 interface SeedEditorProps {
-  // Tablet: renders a Gardener toggle button in the header toolbar
+  /** Tablet: renders a Gardener toggle button in the header toolbar */
   gardenerToggle?: React.ReactNode
+  /** Lifted from NotebookView so Mod+Shift+E can open the export modal */
+  exportOpen?: boolean
+  onExportOpenChange?: (open: boolean) => void
+  /** Increment to force-flush the pending debounced save immediately */
+  saveTrigger?: number
 }
 
-export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
+export default function SeedEditor({ gardenerToggle, exportOpen: exportOpenProp, onExportOpenChange, saveTrigger = 0 }: SeedEditorProps) {
   const { seeds, currentSeedId, updateSeed, deleteSeed, setCurrentSeed } = useStore()
   const seed = seeds.find(s => s.id === currentSeedId) ?? null
 
@@ -19,11 +24,24 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
   const [localContent, setLocalContent] = useState('')
   const [localTags, setLocalTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
-  const [exportOpen, setExportOpen] = useState(false)
+
+  // Export modal — controlled externally when shortcut fires, internal otherwise
+  const [exportOpenLocal, setExportOpenLocal] = useState(false)
+  const exportOpen = exportOpenProp ?? exportOpenLocal
+  const setExportOpen = (v: boolean) => {
+    setExportOpenLocal(v)
+    onExportOpenChange?.(v)
+  }
+
   const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const [savedFlash, setSavedFlash] = useState(false)
   const saveTimer = useRef<NodeJS.Timeout | undefined>(undefined)
   const flashTimer = useRef<NodeJS.Timeout | undefined>(undefined)
+
+  // Refs to current local values so the save trigger can read them synchronously
+  const localTitleRef = useRef(localTitle)
+  const localContentRef = useRef(localContent)
+  const localTagsRef = useRef(localTags)
 
   useEffect(() => {
     if (!seed) return
@@ -31,13 +49,41 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
     setLocalContent(seed.content)
     setLocalTags(seed.tags)
     setTagInput('')
+    // Keep refs in sync with freshly loaded seed
+    localTitleRef.current = seed.title
+    localContentRef.current = seed.content
+    localTagsRef.current = seed.tags
   }, [seed?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const persistUpdate = useCallback((patch: Parameters<typeof updateSeed>[1]) => {
+  const flushSave = useCallback(async () => {
+    if (!currentSeedId) return
+    clearTimeout(saveTimer.current)
+    await updateSeed(currentSeedId, {
+      title: localTitleRef.current,
+      content: localContentRef.current,
+      tags: localTagsRef.current,
+    })
+    setSavedFlash(true)
+    clearTimeout(flashTimer.current)
+    flashTimer.current = setTimeout(() => setSavedFlash(false), 1200)
+  }, [currentSeedId, updateSeed])
+
+  // Mod+S: flush immediately
+  useEffect(() => {
+    if (saveTrigger === 0) return
+    flushSave()
+  }, [saveTrigger]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Always reads from refs — no stale closure values, tags can never be lost
+  const persistUpdate = useCallback(() => {
     if (!currentSeedId) return
     clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(async () => {
-      await updateSeed(currentSeedId, patch)
+      await updateSeed(currentSeedId, {
+        title: localTitleRef.current,
+        content: localContentRef.current,
+        tags: localTagsRef.current,
+      })
       setSavedFlash(true)
       clearTimeout(flashTimer.current)
       flashTimer.current = setTimeout(() => setSavedFlash(false), 1200)
@@ -46,12 +92,14 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
 
   function onTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setLocalTitle(e.target.value)
-    persistUpdate({ title: e.target.value, tags: localTags, content: localContent })
+    localTitleRef.current = e.target.value
+    persistUpdate()
   }
 
   function onContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setLocalContent(e.target.value)
-    persistUpdate({ content: e.target.value, title: localTitle, tags: localTags })
+    localContentRef.current = e.target.value
+    persistUpdate()
   }
 
   function onPhaseChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -66,20 +114,23 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
       if (!val || localTags.includes(val)) return
       const newTags = [...localTags, val]
       setLocalTags(newTags)
+      localTagsRef.current = newTags
       setTagInput('')
-      persistUpdate({ tags: newTags, title: localTitle, content: localContent })
+      persistUpdate()
     }
     if (e.key === 'Backspace' && !tagInput && localTags.length > 0) {
       const newTags = localTags.slice(0, -1)
       setLocalTags(newTags)
-      persistUpdate({ tags: newTags, title: localTitle, content: localContent })
+      localTagsRef.current = newTags
+      persistUpdate()
     }
   }
 
   function removeTag(tag: string) {
     const newTags = localTags.filter(t => t !== tag)
     setLocalTags(newTags)
-    persistUpdate({ tags: newTags, title: localTitle, content: localContent })
+    localTagsRef.current = newTags
+    persistUpdate()
   }
 
   async function handleDelete() {
@@ -112,12 +163,13 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
   }
 
   const exportFormats: { fmt: ExportFormat; label: string; ext: string }[] = [
-    { fmt: 'md',   label: 'Markdown',   ext: '.md'   },
-    { fmt: 'txt',  label: 'Plain Text', ext: '.txt'  },
-    { fmt: 'html', label: 'Styled HTML',ext: '.html' },
-    { fmt: 'pdf',  label: 'PDF',        ext: '.pdf'  },
-    { fmt: 'docx', label: 'Word',       ext: '.docx' },
-    { fmt: 'json', label: 'JSON',       ext: '.json' },
+    { fmt: 'md',       label: 'Markdown',    ext: '.md'   },
+    { fmt: 'obsidian', label: 'Obsidian',    ext: '.md'   },
+    { fmt: 'txt',      label: 'Plain Text',  ext: '.txt'  },
+    { fmt: 'html',     label: 'Styled HTML', ext: '.html' },
+    { fmt: 'pdf',      label: 'PDF',         ext: '.pdf'  },
+    { fmt: 'docx',     label: 'Word',        ext: '.docx' },
+    { fmt: 'json',     label: 'JSON',        ext: '.json' },
   ]
 
   return (
@@ -131,7 +183,6 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
           placeholder="Seed title…"
           className="flex-1 font-sans font-bold text-base md:text-lg tracking-tightest border-none outline-none bg-transparent text-swiss-black placeholder-swiss-gray200 min-w-0"
         />
-        {/* Tablet Gardener toggle — injected from NotebookView */}
         {gardenerToggle}
         <select
           value={seed.phase}
@@ -193,7 +244,7 @@ export default function SeedEditor({ gardenerToggle }: SeedEditorProps) {
             </button>
             <div className="relative">
               <button
-                onClick={() => setExportOpen(v => !v)}
+                onClick={() => setExportOpen(!exportOpen)}
                 disabled={!!exporting}
                 className="px-2.5 py-1.5 bg-[#333] text-white font-bold text-sm hover:bg-[#444] transition-colors border-l border-[#555] disabled:opacity-60"
               >

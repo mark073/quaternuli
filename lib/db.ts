@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
-import type { Seed, CodeFile } from './types'
+import type { Seed, CodeFile, GardenerMessage } from './types'
 
 interface QuaternuliDB extends DBSchema {
   seeds: {
@@ -16,22 +16,34 @@ interface QuaternuliDB extends DBSchema {
     key: string
     value: string | null
   }
+  gardener_messages: {
+    key: string          // seedId
+    value: { seedId: string; messages: GardenerMessage[] }
+  }
 }
 
 let _db: IDBPDatabase<QuaternuliDB> | null = null
 
 async function getDB() {
   if (_db) return _db
-  _db = await openDB<QuaternuliDB>('quaternuli', 1, {
-    upgrade(db) {
-      const seedStore = db.createObjectStore('seeds', { keyPath: 'id' })
-      seedStore.createIndex('by-updated', 'updatedAt')
-      seedStore.createIndex('by-phase', 'phase')
+  _db = await openDB<QuaternuliDB>('quaternuli', 2, {
+    upgrade(db, oldVersion) {
+      // Version 1 — original stores (only created fresh if starting from scratch)
+      if (oldVersion < 1) {
+        const seedStore = db.createObjectStore('seeds', { keyPath: 'id' })
+        seedStore.createIndex('by-updated', 'updatedAt')
+        seedStore.createIndex('by-phase', 'phase')
 
-      const fileStore = db.createObjectStore('files', { keyPath: 'id' })
-      fileStore.createIndex('by-updated', 'updatedAt')
+        const fileStore = db.createObjectStore('files', { keyPath: 'id' })
+        fileStore.createIndex('by-updated', 'updatedAt')
 
-      db.createObjectStore('prefs')
+        db.createObjectStore('prefs')
+      }
+
+      // Version 2 — Gardener message persistence
+      if (oldVersion < 2) {
+        db.createObjectStore('gardener_messages', { keyPath: 'seedId' })
+      }
     },
   })
   return _db
@@ -53,6 +65,8 @@ export async function putSeed(seed: Seed): Promise<void> {
 export async function deleteSeed(id: string): Promise<void> {
   const db = await getDB()
   await db.delete('seeds', id)
+  // Clean up messages for deleted seed
+  await db.delete('gardener_messages', id)
 }
 
 // ─── Code files ───────────────────────────────────────────────────────────────
@@ -83,4 +97,22 @@ export async function getPref(key: string): Promise<string | null> {
 export async function setPref(key: string, value: string): Promise<void> {
   const db = await getDB()
   await db.put('prefs', value, key)
+}
+
+// ─── Gardener messages ────────────────────────────────────────────────────────
+
+export async function getGardenerMessages(): Promise<Record<string, GardenerMessage[]>> {
+  const db = await getDB()
+  const all = await db.getAll('gardener_messages')
+  return Object.fromEntries(all.map(r => [r.seedId, r.messages]))
+}
+
+export async function putGardenerMessages(seedId: string, messages: GardenerMessage[]): Promise<void> {
+  const db = await getDB()
+  await db.put('gardener_messages', { seedId, messages })
+}
+
+export async function deleteGardenerMessages(seedId: string): Promise<void> {
+  const db = await getDB()
+  await db.delete('gardener_messages', seedId)
 }

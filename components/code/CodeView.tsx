@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import FileSidebar from './FileSidebar'
 import CodeEditor from './CodeEditor'
 import CodeGardener from './CodeGardener'
@@ -14,6 +15,18 @@ interface CodeViewProps {
 
 export default function CodeView({ mobilePanel, onMobilePanelChange }: CodeViewProps) {
   const [tabletGardenerOpen, setTabletGardenerOpen] = useState(false)
+  const [gardenerFocusTrigger, setGardenerFocusTrigger] = useState(0)
+
+  const handleShortcutAction = useCallback((action: string) => {
+    if (action === 'gardener:trigger') {
+      setGardenerFocusTrigger(n => n + 1)
+    }
+  }, [])
+
+  useKeyboardShortcuts({
+    scope: 'code',
+    onAction: handleShortcutAction,
+  })
 
   return (
     <div className="flex flex-1 overflow-hidden relative">
@@ -26,7 +39,7 @@ export default function CodeView({ mobilePanel, onMobilePanelChange }: CodeViewP
         <CodeEditor />
       </div>
       <div className={`flex-1 flex flex-col overflow-hidden md:hidden ${mobilePanel === 'gardener' ? 'flex' : 'hidden'}`}>
-        <CodeGardener fullWidth />
+        <CodeGardener fullWidth focusTrigger={gardenerFocusTrigger} />
       </div>
 
       {/* ── TABLET: files + editor, Gardener toggleable (md–lg) ── */}
@@ -49,7 +62,7 @@ export default function CodeView({ mobilePanel, onMobilePanelChange }: CodeViewP
         </div>
         {tabletGardenerOpen && (
           <div className="w-72 flex-shrink-0 flex flex-col overflow-hidden">
-            <CodeGardener />
+            <CodeGardener focusTrigger={gardenerFocusTrigger} />
           </div>
         )}
       </div>
@@ -58,7 +71,7 @@ export default function CodeView({ mobilePanel, onMobilePanelChange }: CodeViewP
       <div className="hidden lg:flex flex-1 overflow-hidden">
         <FileSidebar />
         <CodeEditor />
-        <CodeGardener />
+        <CodeGardener focusTrigger={gardenerFocusTrigger} />
       </div>
 
     </div>

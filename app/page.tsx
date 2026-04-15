@@ -2,19 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import { useStore } from '@/lib/store'
+import { getPref, setPref } from '@/lib/db'
 import TopBar from '@/components/TopBar'
 import NotebookView from '@/components/notebook/NotebookView'
 import CodeView from '@/components/code/CodeView'
 import MobileNav from '@/components/MobileNav'
+import OnboardingModal from '@/components/OnboardingModal'
 import { seedFixtures, fileFixtures } from '@/lib/fixtures'
 import type { CodePanel } from '@/components/code/CodeView'
 
 export type MobilePanel = 'sidebar' | 'editor' | 'gardener'
 
 export default function Page() {
-  const { hydrate, hydrated, mode, seeds, files, createSeed, updateSeed, createFile, updateFile } = useStore()
+  const { hydrate, hydrated, mode, seeds, files, createSeed, updateSeed, createFile, updateFile, setCurrentSeed } = useStore()
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>('sidebar')
   const [codeMobilePanel, setCodeMobilePanel] = useState<CodePanel>('files')
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     hydrate().then(async () => {
@@ -31,9 +34,26 @@ export default function Page() {
           await updateFile(file.id, { content: fixture.content })
         }
       }
+
+      // Show onboarding on first ever visit
+      const seen = await getPref('hasSeenOnboarding')
+      if (!seen) setShowOnboarding(true)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function handleOnboardingComplete() {
+    setShowOnboarding(false)
+    await setPref('hasSeenOnboarding', 'true')
+    // Create a fresh seed and select it so the user lands ready to type
+    const seed = await createSeed()
+    setCurrentSeed(seed.id)
+  }
+
+  async function handleOnboardingSkip() {
+    setShowOnboarding(false)
+    await setPref('hasSeenOnboarding', 'true')
+  }
 
   if (!hydrated) {
     return (
@@ -66,11 +86,11 @@ export default function Page() {
 
       {/* Mobile bottom nav — code mode */}
       {mode === 'code' && (
-        <nav className="md:hidden flex border-t-2 border-swiss-black bg-white flex-shrink-0">
+        <nav className="lg:hidden flex border-t-2 border-swiss-black bg-white flex-shrink-0" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           {([
-            { panel: 'files',   label: 'Files'   },
-            { panel: 'editor',  label: 'Editor'  },
-            { panel: 'gardener',label: 'Gardener'},
+            { panel: 'files',    label: 'Files'    },
+            { panel: 'editor',   label: 'Editor'   },
+            { panel: 'gardener', label: 'Gardener' },
           ] as { panel: CodePanel; label: string }[]).map(({ panel, label }) => (
             <button
               key={panel}
@@ -84,6 +104,14 @@ export default function Page() {
             </button>
           ))}
         </nav>
+      )}
+
+      {/* Onboarding — shown once on first visit */}
+      {showOnboarding && (
+        <OnboardingModal
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+        />
       )}
     </div>
   )

@@ -52,20 +52,28 @@ function GardenerMsg({ msg }: { msg: GardenerMessage }) {
 }
 
 interface GardenerPanelProps {
-  // Mobile: stretch to full width instead of fixed w-72
   fullWidth?: boolean
+  /** Increment to programmatically focus the input (e.g. from Mod+G shortcut) */
+  focusTrigger?: number
 }
 
-export default function GardenerPanel({ fullWidth = false }: GardenerPanelProps) {
+export default function GardenerPanel({ fullWidth = false, focusTrigger = 0 }: GardenerPanelProps) {
   const { currentSeedId, seeds, gardenerMessages, gardenerStreaming } = useStore()
   const { send } = useNotebookGardener()
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const autoTriggered = useRef<string | null>(null)
   const autoTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const seed = seeds.find(s => s.id === currentSeedId) ?? null
   const messages = currentSeedId ? (gardenerMessages[currentSeedId] ?? []) : []
+
+  // Focus input when Mod+G fires
+  useEffect(() => {
+    if (focusTrigger === 0) return
+    inputRef.current?.focus()
+  }, [focusTrigger])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -125,6 +133,7 @@ export default function GardenerPanel({ fullWidth = false }: GardenerPanelProps)
       {/* Input */}
       <div className="flex gap-2 p-3 border-t border-swiss-gray200 flex-shrink-0">
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}

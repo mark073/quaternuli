@@ -7,6 +7,7 @@ import {
   getSeeds, putSeed, deleteSeed as dbDeleteSeed,
   getFiles, putFile, deleteFile as dbDeleteFile,
   getPref, setPref,
+  getGardenerMessages, putGardenerMessages,
 } from './db'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -106,8 +107,6 @@ export const useStore = create<QuaternuliState>((set, get) => ({
     return seed
   },
 
-  // Accepts a fully-formed Seed (from the importer) and persists it as-is.
-  // Prepends to the list so imported seeds appear at the top.
   importSeed: async (seed) => {
     await putSeed(seed)
     set((s) => ({ seeds: [seed, ...s.seeds] }))
@@ -123,11 +122,16 @@ export const useStore = create<QuaternuliState>((set, get) => ({
   },
 
   deleteSeed: async (id) => {
+    // dbDeleteSeed also cleans up gardener_messages (see db.ts)
     await dbDeleteSeed(id)
-    set((s) => ({
-      seeds: s.seeds.filter((seed) => seed.id !== id),
-      currentSeedId: s.currentSeedId === id ? null : s.currentSeedId,
-    }))
+    set((s) => {
+      const { [id]: _, ...remainingMessages } = s.gardenerMessages
+      return {
+        seeds: s.seeds.filter((seed) => seed.id !== id),
+        currentSeedId: s.currentSeedId === id ? null : s.currentSeedId,
+        gardenerMessages: remainingMessages,
+      }
+    })
   },
 
   // ─── Code files ────────────────────────────────────────────────────────────
@@ -177,23 +181,40 @@ export const useStore = create<QuaternuliState>((set, get) => ({
 
   // ─── Gardener messages ─────────────────────────────────────────────────────
   gardenerMessages: {},
-  addGardenerMessage: (seedId, msg) =>
-    set((s) => ({
-      gardenerMessages: {
+
+  addGardenerMessage: (seedId, msg) => {
+    set((s) => {
+      const updated = {
         ...s.gardenerMessages,
         [seedId]: [...(s.gardenerMessages[seedId] ?? []), msg],
-      },
-    })),
-  updateLastGardenerMessage: (seedId, patch) =>
+      }
+      // Persist to DB — fire and forget, streaming messages will be re-persisted
+      // on updateLastGardenerMessage when streaming completes
+      if (!msg.streaming) {
+        putGardenerMessages(seedId, updated[seedId])
+      }
+      return { gardenerMessages: updated }
+    })
+  },
+
+  updateLastGardenerMessage: (seedId, patch) => {
     set((s) => {
       const msgs = s.gardenerMessages[seedId] ?? []
       if (msgs.length === 0) return s
       const updated = [...msgs]
       updated[updated.length - 1] = { ...updated[updated.length - 1], ...patch }
-      return { gardenerMessages: { ...s.gardenerMessages, [seedId]: updated } }
-    }),
+      const updatedMessages = { ...s.gardenerMessages, [seedId]: updated }
+      // Persist once streaming is done (streaming flag cleared or absent)
+      const lastMsg = updated[updated.length - 1]
+      if (!lastMsg.streaming) {
+        putGardenerMessages(seedId, updated)
+      }
+      return { gardenerMessages: updatedMessages }
+    })
+  },
 
   codeGardenerMessages: {},
+
   addCodeGardenerMessage: (fileId, msg) =>
     set((s) => ({
       codeGardenerMessages: {
@@ -201,6 +222,7 @@ export const useStore = create<QuaternuliState>((set, get) => ({
         [fileId]: [...(s.codeGardenerMessages[fileId] ?? []), msg],
       },
     })),
+
   updateLastCodeGardenerMessage: (fileId, patch) =>
     set((s) => {
       const msgs = s.codeGardenerMessages[fileId] ?? []
@@ -218,9 +240,10 @@ export const useStore = create<QuaternuliState>((set, get) => ({
   // ─── Hydration ─────────────────────────────────────────────────────────────
   hydrated: false,
   hydrate: async () => {
-    const [seeds, files, mode, currentSeedId, currentFileId] = await Promise.all([
+    const [seeds, files, gardenerMessages, mode, currentSeedId, currentFileId] = await Promise.all([
       getSeeds(),
       getFiles(),
+      getGardenerMessages(),
       getPref('mode'),
       getPref('currentSeedId'),
       getPref('currentFileId'),
@@ -228,6 +251,7 @@ export const useStore = create<QuaternuliState>((set, get) => ({
     set({
       seeds,
       files,
+      gardenerMessages,
       mode: (mode as AppMode) ?? 'notebook',
       currentSeedId: currentSeedId ?? null,
       currentFileId: currentFileId ?? null,

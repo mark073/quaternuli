@@ -278,7 +278,7 @@ async function exportAsDocx(seed: Seed) {
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 }
 
-export type ExportFormat = 'md' | 'txt' | 'html' | 'json' | 'pdf' | 'docx'
+export type ExportFormat = 'md' | 'txt' | 'html' | 'json' | 'pdf' | 'docx' | 'obsidian'
 
 export async function exportSeed(seed: Seed, format: ExportFormat) {
   const date = formatDate(seed)
@@ -288,6 +288,26 @@ export async function exportSeed(seed: Seed, format: ExportFormat) {
   if (format === 'md') {
     triggerDownload(
       `# ${seed.title}\n\n**Phase:** ${seed.phase}  \n**Tags:** ${tagsStr}  \n**Date:** ${date}\n\n---\n\n${seed.content}`,
+      `${s}.md`, 'text/markdown',
+    )
+  } else if (format === 'obsidian') {
+    const yamlTags = seed.tags.length > 0
+      ? `[${seed.tags.map(t => `"${t}"`).join(', ')}]`
+      : '[]'
+    const createdIso = new Date(seed.createdAt).toISOString().split('T')[0]
+    const updatedIso = new Date(seed.updatedAt).toISOString().split('T')[0]
+    const frontmatter = [
+      '---',
+      `title: "${seed.title.replace(/"/g, '\\"')}"`,
+      `phase: ${seed.phase}`,
+      `tags: ${yamlTags}`,
+      `created: ${createdIso}`,
+      `updated: ${updatedIso}`,
+      `source: quaternuli`,
+      '---',
+    ].join('\n')
+    triggerDownload(
+      `${frontmatter}\n\n# ${seed.title}\n\n${seed.content}`,
       `${s}.md`, 'text/markdown',
     )
   } else if (format === 'txt') {

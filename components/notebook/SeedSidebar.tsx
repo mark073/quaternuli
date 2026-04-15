@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useStore } from '@/lib/store'
 import type { SeedPhase } from '@/lib/types'
 import ImportButton from '@/components/ImportButton'
@@ -23,14 +23,25 @@ export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
     createSeed,
   } = useStore()
 
+  // Active tag filter — local UI state, no store needed
+  const [activeTag, setActiveTag] = useState<string | null>(null)
+
+  // All unique tags across all seeds, sorted alphabetically
+  const allTags = useMemo(() => {
+    const set = new Set<string>()
+    seeds.forEach(s => s.tags.forEach(t => set.add(t)))
+    return Array.from(set).sort()
+  }, [seeds])
+
   const filtered = useMemo(() => {
     const q = seedSearch.toLowerCase()
     return seeds.filter(s => {
       const matchPhase = seedFilter === 'all' || s.phase === seedFilter
       const matchQ = !q || s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q) || s.tags.some(t => t.includes(q))
-      return matchPhase && matchQ
+      const matchTag = !activeTag || s.tags.includes(activeTag)
+      return matchPhase && matchQ && matchTag
     })
-  }, [seeds, seedFilter, seedSearch])
+  }, [seeds, seedFilter, seedSearch, activeTag])
 
   async function handleNewSeed() {
     const seed = await createSeed()
@@ -43,9 +54,13 @@ export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
     onSeedSelect?.()
   }
 
+  function handleTagClick(tag: string) {
+    setActiveTag(prev => prev === tag ? null : tag)
+  }
+
   return (
     <aside className="w-full lg:w-64 border-r-0 lg:border-r-2 border-swiss-black flex flex-col flex-shrink-0 overflow-hidden h-full">
-      {/* Search + filter */}
+      {/* Search + phase filter */}
       <div className="p-2 border-b border-swiss-gray200 flex flex-col gap-2">
         <input
           type="text"
@@ -73,9 +88,27 @@ export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
             )
           })}
         </div>
+
+        {/* Tag filter chips — only shown when tags exist */}
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleTagClick(tag)}
+                className={`font-bold text-2xs tracking-wider uppercase px-2 py-0.5 border transition-all
+                  ${activeTag === tag
+                    ? 'bg-swiss-black border-swiss-black text-white'
+                    : 'border-swiss-gray200 text-swiss-gray400 hover:border-swiss-black hover:text-swiss-black'}`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* List — flex-1 so it takes all available space */}
+      {/* Seed list */}
       <div className="flex-1 overflow-y-auto py-2">
         {filtered.length === 0 ? (
           <p className="px-4 py-6 text-2xs text-swiss-gray400 uppercase tracking-wider text-center">
@@ -99,6 +132,22 @@ export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
                 <div className="text-sm font-medium text-swiss-black truncate leading-tight">
                   {seed.title || '(untitled)'}
                 </div>
+                {seed.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {seed.tags.map(tag => (
+                      <span
+                        key={tag}
+                        onClick={e => { e.stopPropagation(); handleTagClick(tag) }}
+                        className={`font-bold text-2xs tracking-wider uppercase px-1.5 py-0 border cursor-pointer transition-all
+                          ${activeTag === tag
+                            ? 'bg-swiss-black border-swiss-black text-white'
+                            : 'border-swiss-gray200 text-swiss-gray400 hover:border-swiss-black hover:text-swiss-black'}`}
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="font-mono text-2xs text-swiss-gray400 mt-1">{date}</div>
               </div>
             )
@@ -106,7 +155,7 @@ export default function SeedSidebar({ onSeedSelect }: SeedSidebarProps) {
         )}
       </div>
 
-      {/* Bottom actions — compact on mobile */}
+      {/* Bottom actions */}
       <div className="flex-shrink-0 border-t border-swiss-gray200">
         <button
           onClick={handleNewSeed}

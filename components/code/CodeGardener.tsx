@@ -46,18 +46,27 @@ function CodeGardenerMsg({ msg }: { msg: GardenerMessage }) {
 
 interface CodeGardenerProps {
   fullWidth?: boolean
+  /** Increment to programmatically focus the input (e.g. from Mod+G shortcut) */
+  focusTrigger?: number
 }
 
-export default function CodeGardener({ fullWidth = false }: CodeGardenerProps) {
+export default function CodeGardener({ fullWidth = false, focusTrigger = 0 }: CodeGardenerProps) {
   const { currentFileId, files, codeGardenerMessages, codeGardenerStreaming } = useStore()
   const { send } = useCodeGardener()
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const autoTriggered = useRef<string | null>(null)
   const autoTimer = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const file = files.find(f => f.id === currentFileId) ?? null
   const messages = currentFileId ? (codeGardenerMessages[currentFileId] ?? []) : []
+
+  // Focus input when Mod+G fires
+  useEffect(() => {
+    if (focusTrigger === 0) return
+    inputRef.current?.focus()
+  }, [focusTrigger])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -115,6 +124,7 @@ export default function CodeGardener({ fullWidth = false }: CodeGardenerProps) {
       {/* Input */}
       <div className="flex gap-1.5 p-3 border-t border-[#222]">
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
